@@ -1,0 +1,20 @@
+/.junie/
+# Gradle build outputs
+build/
+.gradle/
+*/build/
+
+# Kotlin Multiplatform specific
+.kotlin/
+
+# IDE metadata
+.idea/
+*.iml
+*.iws
+*.ipr
+
+# Android Studio local configuration
+local.properties
+captures/
+.externalNativeBuild/
+.cxx/
