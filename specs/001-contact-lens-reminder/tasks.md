@@ -9,7 +9,7 @@
 
 - [x] T001 Create KMP project structure per implementation plan
 - [x] T002 Initialize Kotlin Multiplatform project with Kotlin 2.2.0 or later, Compose Multiplatform, Room 3.0, Koin, and kotlinx.serialization
-- [ ] T003 [P] Configure Gradle scripts (build.gradle.kts) for Android (Min SDK 31) and iOS (17.0+) targets
+- [x] T003 [P] Configure Gradle scripts (build.gradle.kts) for Android (Min SDK 31) and iOS (17.0+) targets
 
 ---
 
