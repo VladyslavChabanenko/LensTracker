@@ -20,6 +20,8 @@ As a user, I want to see my lens status, set the date I started wearing them, an
 1. **Given** the app is opened, **When** I select today as my start date and keep the default "2 weeks" interval, **Then** the app should display the "14 days left" status and next change date correctly.
 2. **Given** I am on the main screen, **When** I select "Weekly" interval, **Then** the status should update to show the next change date 7 days from the start date.
 3. **Given** I am on the main screen, **When** I leave the date empty, **Then** the app should prompt me to select a date.
+4. **Given** I am selecting a start date, **When** I open the date picker, **Then** dates in the future should be disabled and impossible to select.
+5. **Given** my lenses are past their change date, **When** I view the main screen, **Then** the app should display an overfilled progress bar in red and show "X days overdue" (e.g., "2 days overdue").
 
 ---
 
@@ -34,8 +36,9 @@ As a user, I want to receive a notification according to my selected interval (d
 **Acceptance Scenarios**:
 
 1. **Given** a "Daily" interval is selected, **When** the next day is reached at the reminder time, **Then** I should receive a push notification.
-2. **Given** a "Monthly" interval is selected, **When** the same day next month is reached, **Then** I should receive a push notification.
+2. **Given** a "Monthly" interval is selected, **When** 30 days have passed from the start date, **Then** I should receive a push notification.
 3. **Given** I have received a reminder, **When** I tap it, **Then** the app should open to the main screen.
+4. **Given** the device has rebooted, **When** there is a missed reminder or a scheduled one, **Then** the notification should trigger immediately (for missed) or remain scheduled.
 
 ---
 
@@ -55,20 +58,21 @@ As a user, I want to mark my lenses as changed so the cycle restarts for the sam
 
 ### Edge Cases
 
-- **Notification Permissions**: What happens if the user denies notification permissions? The app should show a warning that reminders won't work.
-- **Leap Years/Month Boundaries**: How does the system handle 14-day calculations across month boundaries? Standard date libraries should handle this.
-- **Device Reboot**: Will the reminders persist after a device reboot? (Requirement for local notification scheduling).
+- **Notification Permissions**: On Android 13+ (API 33), `POST_NOTIFICATIONS` is a runtime permission. The app MUST follow best practices for requesting it and show a warning if denied.
+- **Leap Years/Month Boundaries**: Standard date libraries should handle this. "Monthly" is defined as exactly 30 days.
+- **Device Reboot**: Reminders MUST persist after a device reboot. Missed reminders during power-off should trigger immediately upon reboot.
+- **Timezone Changes**: Reminder times should be relative to the local time of the device.
 
 ## Requirements *(mandatory)*
 
 ### Functional Requirements
 
-- **FR-001**: System MUST allow users to select a "start date" or "last change date".
-- **FR-002**: System MUST allow users to select a replacement interval: Daily, Weekly, 2 Weeks (Default), or Monthly.
-- **FR-003**: System MUST calculate the next change date based on the selected interval.
-- **FR-004**: System MUST schedule local notifications to alert the user on the change date.
-- **FR-005**: System MUST allow users to reset the timer (Mark as Changed).
-- **FR-006**: System MUST persist the lens status (start date, interval, next change date) across app restarts.
+- **FR-001**: System MUST allow users to select a "start date" or "last change date" (future dates NOT allowed).
+- **FR-002**: System MUST allow users to select a replacement interval: Daily, Weekly, 2 Weeks (Default), or Monthly (30 days).
+- **FR-003**: System MUST calculate the next change date and "overdue" status.
+- **FR-004**: System MUST schedule local notifications and ensure they persist/trigger after reboot.
+- **FR-005**: System MUST allow users to reset the timer (Mark as Changed) with a confirmation dialog.
+- **FR-006**: System MUST persist the lens status using Room with support for auto-migrations.
 - **FR-007**: System MUST allow users to set a preferred time of day for the reminder notification.
 
 ### Key Entities

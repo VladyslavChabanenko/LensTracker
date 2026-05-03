@@ -17,9 +17,9 @@
 
 **Purpose**: Core infrastructure that MUST be complete before ANY user story can be implemented
 
-- [ ] T004 Setup Room database, entities, and DAOs in commonMain (KMP support)
-- [ ] T005 [P] Setup Notification interface in commonMain and platform implementations in androidMain/iosMain (via Koin DI, avoiding expect/actual where possible)
-- [ ] T006 [P] Implement date utility functions in commonMain for flexible interval calculations
+- [ ] T004 Setup Room database, entities, and DAOs in commonMain (KMP support, auto-migration enabled)
+- [ ] T005 [P] Setup Notification interface in commonMain and platform implementations in androidMain/iosMain (via Koin DI, avoiding expect/actual where possible, handle reboot)
+- [ ] T006 [P] Implement date utility functions in commonMain for flexible interval calculations (30-day month, overdue status)
 - [ ] T007 [P] Setup Koin dependency injection modules in commonMain
 - [ ] T008 Create base LensCycle data classes and models in commonMain
 
@@ -37,8 +37,8 @@
 
 - [ ] T009 [US1] Create Main screen (combining status and setup) in composeApp/commonMain using Compose Multiplatform
 - [ ] T010 [US1] Implement Repository in shared/commonMain to persist data via Room DAOs
-- [ ] T011 [US1] Calculate and display "days left" and next change date in the main screen UI
-- [ ] T012 [US1] Add basic validation (date and interval must be valid)
+- [ ] T011 [US1] Calculate and display "days left" and next change date in the main screen UI (include red overfilled progress bar for overdue state)
+- [ ] T012 [US1] Add basic validation (no future start dates allowed)
 
 **Checkpoint**: User Story 1 is functional.
 
@@ -55,7 +55,7 @@
 - [ ] T013 [US2] Implement notification scheduling logic when start date is saved
 - [ ] T014 [US2] Create notification content (title, message)
 - [ ] T015 [US2] Implement notification handler to open the app to the main screen when tapped
-- [ ] T016 [US2] Handle notification permissions request flow
+- [ ] T016 [US2] Handle notification permissions request flow (best practice for Android 13+)
 
 **Checkpoint**: Reminders are now working.
 
