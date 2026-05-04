@@ -24,6 +24,43 @@ Shared business logic must be unit-testable without devices/emulators:
 - Use fakes/mocks at boundaries; avoid direct IO in core logic.
 - Keep concurrency predictable; avoid hidden global state.
 
+### VI. Requirement-Driven TDD
+The development workflow must follow a strict Test-Driven Development cycle based on specifications:
+- **Test First**: Unit tests must be written before implementation code, derived directly from the feature requirements and specifications.
+- **Fail First**: New tests must initially fail (Red) to verify they are testing the intended behavior.
+- **Implement**: Implementation code is written only to satisfy the requirements captured in the tests (Green).
+- **Refactor**: Clean up and optimize the implementation while ensuring tests remain passing.
+
+### VII. Dependency Guardrails
+Architecture must enforce strict boundaries between layers:
+- **Inward Only**: Dependencies must strictly flow toward the domain module. Data and UI layers
+  depend on domain; domain depends on nothing.
+- **Mapping Requirement**: Every boundary crossing (Data → Domain or Domain → UI) requires a
+  dedicated mapper function or class.
+- **No Leakage**: Third-party framework annotations (e.g., `@Entity`, `@Serializable`,
+  `@Composable`) are strictly forbidden in the domain module. Domain models must remain
+  framework-agnostic.
+
+### VII. SOLID Principles
+- **S - Single Responsibility**: Every class or module should have one reason to change. Separate "what the app does" (Domain) from "how it fetches data" (Data).
+- **O - Open/Closed**: Software entities should be open for extension but closed for modification. Use interfaces to allow new functionality without changing existing core logic.
+- **L - Liskov Substitution**: Objects of a superclass should be replaceable with objects of its subclasses without breaking the application (essential for our `expect`/`actual` and interface implementations).
+- **I - Interface Segregation**: Clients should not be forced to depend on methods they do not use. Prefer small, focused interfaces over "God" interfaces.
+- **D - Dependency Inversion**: Depend on abstractions, not concretions. High-level modules (Domain) must not depend on low-level modules (Data/UI). Both must depend on abstractions.
+
+## Naming Conventions
+
+### Data Models
+
+- **Database Entities**: Must use the `Entity` suffix (e.g., `UserEntity`)
+- **Network Models**: API transfer objects must use the `Dto` suffix (e.g., `UserDto`)
+- **Domain Models**: Must remain "pure" with no suffix (e.g., `User`)
+
+### Interfaces
+
+Prefer behavior-based naming over "I" prefixes (e.g., `UserRepository` instead of
+`IUserRepository`).
+
 ## Technology Stack
 
 ### Core Requirements

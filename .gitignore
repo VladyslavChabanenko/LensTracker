@@ -19,3 +19,4 @@ captures/
 .externalNativeBuild/
 .cxx/
 /gradle/gradle-daemon-jvm.properties
+/.claude/
