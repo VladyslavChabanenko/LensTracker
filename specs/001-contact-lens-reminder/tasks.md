@@ -19,7 +19,7 @@
 
 **Purpose**: Add missing dependency required by all shared domain logic.
 
-- [ ] T001 Add `kotlinx-datetime = "0.6.2"` to `[versions]` and `[libraries]` in `gradle/libs.versions.toml`; add `implementation(libs.kotlinx.datetime)` to `commonMain.dependencies` block in `composeApp/build.gradle.kts`; sync Gradle to verify build succeeds
+- [X] T001 Add `kotlinx-datetime = "0.6.2"` to `[versions]` and `[libraries]` in `gradle/libs.versions.toml`; add `implementation(libs.kotlinx.datetime)` to `commonMain.dependencies` block in `composeApp/build.gradle.kts`; sync Gradle to verify build succeeds
 
 **Checkpoint**: Gradle sync green — `kotlinx.datetime.LocalDate` resolvable in `commonMain`
 
