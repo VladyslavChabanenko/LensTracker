@@ -33,6 +33,7 @@ kotlin {
             implementation(libs.compose.uiToolingPreview)
             implementation(libs.androidx.activity.compose)
             implementation(libs.koin.android)
+            implementation(libs.androidx.sqlite.framework)
         }
         commonMain.dependencies {
             implementation(libs.compose.runtime)
@@ -60,6 +61,9 @@ kotlin {
         }
         commonTest.dependencies {
             implementation(libs.kotlin.test)
+        }
+        iosMain.dependencies {
+            implementation(libs.androidx.sqlite.bundled)
         }
     }
 }
