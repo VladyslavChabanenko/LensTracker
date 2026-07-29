@@ -68,6 +68,12 @@ kotlin {
     }
 }
 
+compose.resources {
+    // Without this the generated accessors land in `composeapp.generated.resources`.
+    packageOfResClass = "com.chb.lenstracker.resources"
+    publicResClass = false
+}
+
 extensions.configure<ApplicationExtension>("android") {
     namespace = "com.chb.lenstracker"
     compileSdk = libs.versions.android.compileSdk.get().toInt()

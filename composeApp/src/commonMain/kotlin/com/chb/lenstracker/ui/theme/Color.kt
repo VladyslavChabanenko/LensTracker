@@ -41,3 +41,6 @@ val Accent2_600 = Color(0xFFD82071)
 val Accent2_700 = Color(0xFFAA0B56)
 val Accent2_800 = Color(0xFF790E3D)
 val Accent2_900 = Color(0xFF4B1528)
+
+// Hairline borders — design's --color-divider (text at 16% opacity)
+val ColorDivider = ColorText.copy(alpha = 0.16f)

@@ -1,0 +1,57 @@
+<resources>
+    <!-- Screen -->
+    <string name="home_title">Lens Reminder</string>
+
+    <!-- Form fields -->
+    <string name="home_start_date_label">Start date</string>
+    <string name="home_start_date_placeholder">Select start date</string>
+    <string name="home_interval_label">Replacement interval</string>
+
+    <!-- Status card -->
+    <string name="status_kicker">STATUS</string>
+    <string name="status_empty">Select a start date to begin tracking your lenses.</string>
+    <string name="status_today">Today</string>
+    <string name="status_change_due">change is due</string>
+    <plurals name="status_days_overdue">
+        <item quantity="one">day overdue</item>
+        <item quantity="other">days overdue</item>
+    </plurals>
+    <plurals name="status_days_left">
+        <item quantity="one">day left</item>
+        <item quantity="other">days left</item>
+    </plurals>
+    <!-- %1$s: formatted next-change date -->
+    <string name="status_next_change">Next change: %1$s</string>
+
+    <!-- Replacement intervals -->
+    <string name="interval_daily">Daily</string>
+    <string name="interval_weekly">Weekly</string>
+    <string name="interval_two_weeks">2 Weeks</string>
+    <string name="interval_monthly">Monthly</string>
+
+    <!-- Banner messages -->
+    <string name="message_notifications_disabled">Notifications are off &#8212; you won&apos;t get reminders. Enable them in Settings.</string>
+    <string name="message_save_failed">Something went wrong saving your cycle.</string>
+    <string name="message_change_due_today">Your lenses are due for a change today.</string>
+
+    <!-- Actions -->
+    <string name="action_ok">OK</string>
+    <string name="action_cancel">Cancel</string>
+
+    <!-- Dates. %1$s: month name, %2$s: day of month, %3$s: year -->
+    <string name="date_display_format">%1$s %2$s, %3$s</string>
+    <string-array name="month_names">
+        <item>January</item>
+        <item>February</item>
+        <item>March</item>
+        <item>April</item>
+        <item>May</item>
+        <item>June</item>
+        <item>July</item>
+        <item>August</item>
+        <item>September</item>
+        <item>October</item>
+        <item>November</item>
+        <item>December</item>
+    </string-array>
+</resources>

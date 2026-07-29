@@ -5,6 +5,9 @@ import androidx.lifecycle.viewModelScope
 import com.chb.lenstracker.data.repository.LensCycleRepository
 import com.chb.lenstracker.domain.model.LensCycle
 import com.chb.lenstracker.domain.model.ReminderInterval
+import com.chb.lenstracker.resources.Res
+import com.chb.lenstracker.resources.date_display_format
+import com.chb.lenstracker.resources.month_names
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -16,15 +19,30 @@ import kotlin.time.ExperimentalTime
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.todayIn
+import org.jetbrains.compose.resources.getString
+import org.jetbrains.compose.resources.getStringArray
+
+/**
+ * Everything the status card renders, fully derived from the cycle here so the card needs
+ * neither the domain model nor any date arithmetic of its own.
+ */
+data class StatusCardUiState(
+    val nextChangeDateString: String,
+    val daysRemaining: Int,
+    val isOverdue: Boolean,
+    val baseProgressFraction: Float,
+    val overdueProgressFraction: Float
+)
 
 data class HomeUiState(
     val lensCycle: LensCycle? = null,
-    val daysRemaining: Int = 0,
-    val isOverdue: Boolean = false,
-    val baseProgressFraction: Float = 0f,
-    val overdueProgressFraction: Float = 0f,
+    /** `null` until a cycle exists — the card shows its empty prompt in that case. */
+    val statusCard: StatusCardUiState? = null,
+    /** `null` until a start date is picked — the field shows its placeholder in that case. */
+    val startDateString: String? = null,
     val hasNotificationPermission: Boolean = true,
-    val showDatePicker: Boolean = false
+    val showDatePicker: Boolean = false,
+    val selectedInterval: ReminderInterval = ReminderInterval.TWO_WEEKS
 )
 
 sealed class HomeUiEvent {
@@ -33,6 +51,7 @@ sealed class HomeUiEvent {
     data object OpenDatePicker : HomeUiEvent()
     data object CloseDatePicker : HomeUiEvent()
     data class SelectDate(val date: LocalDate) : HomeUiEvent()
+    data class SelectInterval(val interval: ReminderInterval) : HomeUiEvent()
 }
 
 private const val DEFAULT_REMINDER_HOUR = 9
@@ -45,11 +64,19 @@ class HomeViewModel(
 
     private val showDatePicker = MutableStateFlow(false)
 
+    // Holds the user's interval choice while no cycle exists yet to persist it on (FR-002 lets
+    // interval be picked before a start date). Ignored once a cycle exists; its interval wins.
+    private val pendingInterval = MutableStateFlow(DEFAULT_INTERVAL)
+
     val uiState: StateFlow<HomeUiState> = combine(
         repository.observe(),
-        showDatePicker
-    ) { lensCycle, showDatePicker ->
-        lensCycle.toUiState().copy(showDatePicker = showDatePicker)
+        showDatePicker,
+        pendingInterval
+    ) { lensCycle, showDatePicker, pendingInterval ->
+        lensCycle.toUiState().copy(
+            showDatePicker = showDatePicker,
+            selectedInterval = lensCycle?.interval ?: pendingInterval
+        )
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), HomeUiState())
 
     fun onEvent(event: HomeUiEvent) {
@@ -60,8 +87,16 @@ class HomeViewModel(
             HomeUiEvent.CloseDatePicker -> showDatePicker.value = false
             is HomeUiEvent.SelectDate -> {
                 showDatePicker.value = false
-                val interval = uiState.value.lensCycle?.interval ?: DEFAULT_INTERVAL
+                val interval = uiState.value.lensCycle?.interval ?: pendingInterval.value
                 saveCycle(HomeUiEvent.SaveCycle(event.date, interval))
+            }
+            is HomeUiEvent.SelectInterval -> {
+                val current = uiState.value.lensCycle
+                if (current != null) {
+                    saveCycle(HomeUiEvent.SaveCycle(current.startDate, event.interval))
+                } else {
+                    pendingInterval.value = event.interval
+                }
             }
         }
     }
@@ -82,15 +117,27 @@ class HomeViewModel(
     }
 
     @OptIn(ExperimentalTime::class)
-    private fun LensCycle?.toUiState(): HomeUiState {
+    private suspend fun LensCycle?.toUiState(): HomeUiState {
         if (this == null) return HomeUiState()
         val today = Clock.System.todayIn(TimeZone.currentSystemDefault())
         return HomeUiState(
             lensCycle = this,
-            daysRemaining = daysRemaining(today),
-            isOverdue = isOverdue(today),
-            baseProgressFraction = baseProgressFraction(today),
-            overdueProgressFraction = overdueProgressFraction(today)
+            statusCard = StatusCardUiState(
+                nextChangeDateString = nextChangeDate().displayFormat(),
+                daysRemaining = daysRemaining(today),
+                isOverdue = isOverdue(today),
+                baseProgressFraction = baseProgressFraction(today),
+                overdueProgressFraction = overdueProgressFraction(today)
+            ),
+            startDateString = startDate.displayFormat()
         )
     }
 }
+
+/** "July 17, 2026" — kept here so the UI layer receives display-ready text, not dates. */
+private suspend fun LocalDate.displayFormat(): String = getString(
+    Res.string.date_display_format,
+    getStringArray(Res.array.month_names)[month.ordinal],
+    day.toString(),
+    year.toString()
+)
