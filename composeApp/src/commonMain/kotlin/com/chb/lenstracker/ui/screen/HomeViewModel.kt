@@ -5,9 +5,10 @@ import androidx.lifecycle.viewModelScope
 import com.chb.lenstracker.data.repository.LensCycleRepository
 import com.chb.lenstracker.domain.model.LensCycle
 import com.chb.lenstracker.domain.model.ReminderInterval
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlin.time.Clock
@@ -22,29 +23,46 @@ data class HomeUiState(
     val isOverdue: Boolean = false,
     val baseProgressFraction: Float = 0f,
     val overdueProgressFraction: Float = 0f,
-    val hasNotificationPermission: Boolean = true
+    val hasNotificationPermission: Boolean = true,
+    val showDatePicker: Boolean = false
 )
 
 sealed class HomeUiEvent {
     data class SaveCycle(val startDate: LocalDate, val interval: ReminderInterval) : HomeUiEvent()
     data object MarkAsChanged : HomeUiEvent()
+    data object OpenDatePicker : HomeUiEvent()
+    data object CloseDatePicker : HomeUiEvent()
+    data class SelectDate(val date: LocalDate) : HomeUiEvent()
 }
 
 private const val DEFAULT_REMINDER_HOUR = 9
 private const val DEFAULT_REMINDER_MINUTE = 0
+private val DEFAULT_INTERVAL = ReminderInterval.TWO_WEEKS
 
 class HomeViewModel(
     private val repository: LensCycleRepository
 ) : ViewModel() {
 
-    val uiState: StateFlow<HomeUiState> = repository.observe()
-        .map { it.toUiState() }
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), HomeUiState())
+    private val showDatePicker = MutableStateFlow(false)
+
+    val uiState: StateFlow<HomeUiState> = combine(
+        repository.observe(),
+        showDatePicker
+    ) { lensCycle, showDatePicker ->
+        lensCycle.toUiState().copy(showDatePicker = showDatePicker)
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), HomeUiState())
 
     fun onEvent(event: HomeUiEvent) {
         when (event) {
             is HomeUiEvent.SaveCycle -> saveCycle(event)
             HomeUiEvent.MarkAsChanged -> viewModelScope.launch { repository.markAsChanged() }
+            HomeUiEvent.OpenDatePicker -> showDatePicker.value = true
+            HomeUiEvent.CloseDatePicker -> showDatePicker.value = false
+            is HomeUiEvent.SelectDate -> {
+                showDatePicker.value = false
+                val interval = uiState.value.lensCycle?.interval ?: DEFAULT_INTERVAL
+                saveCycle(HomeUiEvent.SaveCycle(event.date, interval))
+            }
         }
     }
 
