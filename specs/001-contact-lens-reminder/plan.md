@@ -29,7 +29,7 @@ Build a single-screen KMP mobile app (Android + iOS) that tracks a contact lens 
 | II. Expect/Actual Minimalism | ✅ PASS | `expect`/`actual` used only for the Room database factory function (unavoidable). `NotificationScheduler` uses interface + Koin DI. |
 | III. Library-First | ✅ PASS | Single `:composeApp` module is appropriate for this app scope. Clean package layering achieves separation of concerns without premature module splits. |
 | IV. Build Must Stay Green | ✅ PASS | `kotlinx-datetime` 0.6.2 added to `libs.versions.toml`; Room 3 alpha locked at `3.0.0-alpha03`; no version auto-upgrades. |
-| V. Deterministic, Testable Logic | ✅ PASS | `LensCycleCalculator` (pure functions: nextChangeDate, daysRemaining, isOverdue, progressFraction) lives in `commonMain` and is fully unit-testable without device. |
+| V. Deterministic, Testable Logic | ✅ PASS | `LensCycle` member functions (pure: nextChangeDate, daysRemaining, isOverdue, progressFraction) live in `commonMain` and are fully unit-testable without device. |
 
 **Post-design re-check**: No violations introduced. The single `expect`/`actual` for the Room database builder is justified (no multiplatform builder API exists) and documented in Complexity Tracking.
 
@@ -57,11 +57,9 @@ composeApp/src/
 │   ├── di/
 │   │   └── AppModule.kt            # Shared Koin module (DB, repository, use cases)
 │   ├── domain/
-│   │   ├── model/
-│   │   │   ├── LensCycle.kt        # Domain model (startDate, interval, reminderTime)
-│   │   │   └── ReminderInterval.kt # Enum: DAILY, WEEKLY, TWO_WEEKS, MONTHLY
-│   │   └── usecase/
-│   │       └── LensCycleCalculator.kt  # Pure: nextChangeDate, daysRemaining, progressFraction
+│   │   └── model/
+│   │       ├── LensCycle.kt        # Domain model + pure member fns: nextChangeDate, daysRemaining, isOverdue, progressFraction
+│   │       └── ReminderInterval.kt # Enum: DAILY, WEEKLY, TWO_WEEKS, MONTHLY
 │   ├── data/
 │   │   ├── db/
 │   │   │   ├── LensTrackerDatabase.kt  # @Database abstract class (commonMain)

@@ -36,7 +36,7 @@ The single entity representing the user's active lens replacement cycle. Stored 
 
 ---
 
-## Computed Values (not stored — derived by `LensCycleCalculator`)
+## Computed Values (not stored — derived by member functions on `LensCycle`)
 
 | Value | Formula | Notes |
 |-------|---------|-------|

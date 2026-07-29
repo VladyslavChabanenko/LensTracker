@@ -3,7 +3,7 @@
 **Input**: Design documents from `/specs/001-contact-lens-reminder/`
 **Prerequisites**: plan.md ✅, spec.md ✅, research.md ✅, data-model.md ✅, contracts/ ✅, quickstart.md ✅
 
-**Tests**: Unit tests included for `LensCycleCalculator` (pure domain logic, explicitly called out in plan.md technical context — no device/emulator required).
+**Tests**: Unit tests included for `LensCycle`'s pure domain calculations (explicitly called out in plan.md technical context — no device/emulator required).
 
 **Organization**: Tasks are grouped by user story to enable independent implementation and testing of each story.
 
@@ -55,11 +55,11 @@
 
 ### Implementation for User Story 1
 
-- [ ] T013 [P] [US1] Create `LensCycle` data class with `startDate: LocalDate`, `interval: ReminderInterval`, `reminderHour: Int`, `reminderMinute: Int`; add `LensCycleEntity.toDomain()` and `LensCycle.toEntity()` mappers in `composeApp/src/commonMain/kotlin/com/chb/lenstracker/domain/model/LensCycle.kt`
-- [ ] T014 [P] [US1] Implement `LensCycleCalculator` with pure functions: `nextChangeDate(startDate, interval): LocalDate` (startDate + interval.days), `daysRemaining(startDate, interval, today): Int` (signed, negative = overdue), `isOverdue(daysRemaining): Boolean`, `progressFraction(startDate, interval, today): Float` (0.0 at start, 1.0 at due date, capped at 1.5f for display) in `composeApp/src/commonMain/kotlin/com/chb/lenstracker/domain/usecase/LensCycleCalculator.kt`
-- [ ] T015 [P] [US1] Write `LensCycleCalculatorTest` with `kotlin.test` covering: `nextChangeDate` for all 4 intervals, `daysRemaining` when active/due/overdue, `isOverdue` boundary (0 = not overdue), `progressFraction` at start/midpoint/due/overdue; run with `./gradlew :composeApp:testDebugUnitTest` in `composeApp/src/commonTest/kotlin/com/chb/lenstracker/domain/usecase/LensCycleCalculatorTest.kt`
+- [X] T013 [P] [US1] Create `LensCycle` data class with `startDate: LocalDate`, `interval: ReminderInterval`, `reminderHour: Int`, `reminderMinute: Int`; add `LensCycleEntity.toDomain()` and `LensCycle.toEntity()` mappers in `composeApp/src/commonMain/kotlin/com/chb/lenstracker/domain/model/LensCycle.kt`
+- [X] T014 [P] [US1] Add pure member functions on `LensCycle`: `fun nextChangeDate(): LocalDate` (startDate + interval.days), `fun daysRemaining(today): Int` (signed, negative = overdue), `fun progressFraction(today): Float` (0.0 at start, 1.0 at due date, capped at 1.5f for display), `fun isOverdue(today): Boolean` (daysRemaining(today) < 0) in `composeApp/src/commonMain/kotlin/com/chb/lenstracker/domain/model/LensCycle.kt`
+- [X] T015 [P] [US1] Write `LensCycleTest` with `kotlin.test` covering: `nextChangeDate` for all 4 intervals, `daysRemaining` when active/due/overdue, `isOverdue` boundary (0 = not overdue), `progressFraction` at start/midpoint/due/overdue; run with `./gradlew :composeApp:testDebugUnitTest` in `composeApp/src/commonTest/kotlin/com/chb/lenstracker/domain/model/LensCycleTest.kt`
 - [ ] T016 [US1] Implement `LensCycleRepositoryImpl` injecting `LensCycleDao`: `observe()` delegates to `dao.observeLensCycle()`, `save()` maps domain→entity and calls `dao.upsertLensCycle()`, `markAsChanged()` stub (throws `NotImplementedError` until Phase 5); register as `LensCycleRepository` binding in `AppModule.kt` in `composeApp/src/commonMain/kotlin/com/chb/lenstracker/data/repository/LensCycleRepositoryImpl.kt`
-- [ ] T017 [US1] Create `HomeUiState` data class (`lensCycle: LensCycle?`, `daysRemaining: Int`, `isOverdue: Boolean`, `progressFraction: Float`, `hasNotificationPermission: Boolean = true`) and `HomeUiEvent` sealed class (`SaveCycle`, `MarkAsChanged`); implement `HomeViewModel` collecting `repository.observe()`, mapping to `HomeUiState` via `LensCycleCalculator`, validating startDate not in future; register `HomeViewModel` in `AppModule.kt` in `composeApp/src/commonMain/kotlin/com/chb/lenstracker/ui/screen/HomeViewModel.kt`
+- [ ] T017 [US1] Create `HomeUiState` data class (`lensCycle: LensCycle?`, `daysRemaining: Int`, `isOverdue: Boolean`, `progressFraction: Float`, `hasNotificationPermission: Boolean = true`) and `HomeUiEvent` sealed class (`SaveCycle`, `MarkAsChanged`); implement `HomeViewModel` collecting `repository.observe()`, mapping to `HomeUiState` via `LensCycle`'s extension functions, validating startDate not in future; register `HomeViewModel` in `AppModule.kt` in `composeApp/src/commonMain/kotlin/com/chb/lenstracker/ui/screen/HomeViewModel.kt`
 - [ ] T018 [P] [US1] Create `LensProgressBar` composable accepting `fraction: Float` and `isOverdue: Boolean`; use `LinearProgressIndicator` with `color = if (isOverdue) MaterialTheme.colorScheme.error else Color.Green`; show label "X days left" or "X days overdue" below bar in `composeApp/src/commonMain/kotlin/com/chb/lenstracker/ui/component/LensProgressBar.kt`
 - [ ] T019 [P] [US1] Create `IntervalSelector` composable accepting `selected: ReminderInterval` and `onSelect: (ReminderInterval) -> Unit`; render a `Row` of `FilterChip` for DAILY / WEEKLY / TWO_WEEKS / MONTHLY with the selected chip highlighted in `composeApp/src/commonMain/kotlin/com/chb/lenstracker/ui/component/IntervalSelector.kt`
 - [ ] T020 [US1] Create `HomeScreen` composable wired to `HomeViewModel` via Koin; include: `DatePicker` or `DatePickerDialog` with `selectableDates` restricting future dates (FR-001), `IntervalSelector`, `LensProgressBar`, next-change-date text, and error message when no date selected; dispatch `SaveCycle` event on valid input change in `composeApp/src/commonMain/kotlin/com/chb/lenstracker/ui/screen/HomeScreen.kt`
@@ -156,8 +156,8 @@
 ```bash
 # Launch simultaneously once T002 (ReminderInterval) is done:
 Task T013: "Create LensCycle domain model in .../domain/model/LensCycle.kt"
-Task T014: "Implement LensCycleCalculator in .../domain/usecase/LensCycleCalculator.kt"
-Task T015: "Write LensCycleCalculatorTest in .../commonTest/.../LensCycleCalculatorTest.kt"
+Task T014: "Add LensCycle member functions in .../domain/model/LensCycle.kt"
+Task T015: "Write LensCycleTest in .../commonTest/.../domain/model/LensCycleTest.kt"
 
 # Launch simultaneously once T017 (HomeViewModel) is done:
 Task T018: "Create LensProgressBar in .../ui/component/LensProgressBar.kt"
