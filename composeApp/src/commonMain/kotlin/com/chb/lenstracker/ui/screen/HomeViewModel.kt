@@ -22,7 +22,8 @@ data class HomeUiState(
     val lensCycle: LensCycle? = null,
     val daysRemaining: Int = 0,
     val isOverdue: Boolean = false,
-    val progressFraction: Float = 0f,
+    val baseProgressFraction: Float = 0f,
+    val overdueProgressFraction: Float = 0f,
     val hasNotificationPermission: Boolean = true
 )
 
@@ -72,7 +73,8 @@ class HomeViewModel(
             lensCycle = this,
             daysRemaining = daysRemaining(today),
             isOverdue = isOverdue(today),
-            progressFraction = progressFraction(today)
+            baseProgressFraction = baseProgressFraction(today),
+            overdueProgressFraction = overdueProgressFraction(today)
         )
     }
 }

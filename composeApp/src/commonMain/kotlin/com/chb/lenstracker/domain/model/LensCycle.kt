@@ -18,10 +18,19 @@ data class LensCycle(
     fun daysRemaining(today: LocalDate): Int =
         today.until(nextChangeDate(), DateTimeUnit.DAY).toInt()
 
-    fun progressFraction(today: LocalDate): Float {
+    /** Elapsed portion of the interval, 0f at start to 1f at (or past) the due date. */
+    fun baseProgressFraction(today: LocalDate): Float {
         val remaining = daysRemaining(today)
-        val fraction = (interval.days - remaining).toFloat() / interval.days
-        return fraction.coerceAtMost(1.5f)
+        val elapsed = (interval.days - remaining).toFloat() / interval.days
+        return elapsed.coerceIn(0f, 1f)
+    }
+
+    /** Overdue portion drawn on top of the base bar, 0f while on-track, up to 1f at one full interval overdue. */
+    fun overdueProgressFraction(today: LocalDate): Float {
+        val remaining = daysRemaining(today)
+        if (remaining >= 0) return 0f
+        val fraction = (-remaining).toFloat() / interval.days
+        return fraction.coerceIn(0f, 1f)
     }
 
     fun isOverdue(today: LocalDate): Boolean = daysRemaining(today) < 0

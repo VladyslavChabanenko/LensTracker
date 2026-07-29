@@ -48,6 +48,11 @@ Architecture must enforce strict boundaries between layers:
 - **I - Interface Segregation**: Clients should not be forced to depend on methods they do not use. Prefer small, focused interfaces over "God" interfaces.
 - **D - Dependency Inversion**: Depend on abstractions, not concretions. High-level modules (Domain) must not depend on low-level modules (Data/UI). Both must depend on abstractions.
 
+## UI Conventions
+
+### Composable Previews
+Every `@Composable` function intended for reuse (screens and components alike) must ship with at least one `@Preview` composable in the same file. Where the composable has visually distinct states (e.g. empty/filled, error/success, overdue/on-track), add one preview per state so each renders correctly without running the app.
+
 ## Naming Conventions
 
 ### Data Models
@@ -95,4 +100,4 @@ Prefer behavior-based naming over "I" prefixes (e.g., `UserRepository` instead o
 ## Governance
 This constitution defines the architectural boundaries and technical requirements of the project. Amendments require a consensus among lead developers and a documented migration plan for affected modules.
 
-**Version**: 1.0.0 | **Ratified**: 2026-05-01 | **Last Amended**: 2026-05-01
+**Version**: 1.1.0 | **Ratified**: 2026-05-01 | **Last Amended**: 2026-07-29

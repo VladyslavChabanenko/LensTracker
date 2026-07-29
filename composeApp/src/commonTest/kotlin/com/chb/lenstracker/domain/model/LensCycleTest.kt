@@ -68,26 +68,44 @@ class LensCycleTest {
     }
 
     @Test
-    fun progressFractionAtStart() {
+    fun baseProgressFractionAtStart() {
         val lensCycle = cycle(ReminderInterval.TWO_WEEKS)
-        assertEquals(0.0f, lensCycle.progressFraction(startDate))
+        assertEquals(0.0f, lensCycle.baseProgressFraction(startDate))
     }
 
     @Test
-    fun progressFractionAtMidpoint() {
+    fun baseProgressFractionAtMidpoint() {
         val lensCycle = cycle(ReminderInterval.TWO_WEEKS)
-        assertEquals(0.5f, lensCycle.progressFraction(LocalDate(2026, 1, 8)))
+        assertEquals(0.5f, lensCycle.baseProgressFraction(LocalDate(2026, 1, 8)))
     }
 
     @Test
-    fun progressFractionAtDueDate() {
+    fun baseProgressFractionAtDueDate() {
         val lensCycle = cycle(ReminderInterval.TWO_WEEKS)
-        assertEquals(1.0f, lensCycle.progressFraction(LocalDate(2026, 1, 15)))
+        assertEquals(1.0f, lensCycle.baseProgressFraction(LocalDate(2026, 1, 15)))
     }
 
     @Test
-    fun progressFractionCappedWhenOverdue() {
+    fun baseProgressFractionCappedWhenOverdue() {
         val lensCycle = cycle(ReminderInterval.TWO_WEEKS)
-        assertEquals(1.5f, lensCycle.progressFraction(LocalDate(2026, 1, 25)))
+        assertEquals(1.0f, lensCycle.baseProgressFraction(LocalDate(2026, 1, 25)))
+    }
+
+    @Test
+    fun overdueProgressFractionZeroWhenNotOverdue() {
+        val lensCycle = cycle(ReminderInterval.TWO_WEEKS)
+        assertEquals(0.0f, lensCycle.overdueProgressFraction(LocalDate(2026, 1, 15)))
+    }
+
+    @Test
+    fun overdueProgressFractionPartialWhenOverdue() {
+        val lensCycle = cycle(ReminderInterval.TWO_WEEKS)
+        assertEquals(3f / 14f, lensCycle.overdueProgressFraction(LocalDate(2026, 1, 18)))
+    }
+
+    @Test
+    fun overdueProgressFractionCappedAtOneFullIntervalOverdue() {
+        val lensCycle = cycle(ReminderInterval.TWO_WEEKS)
+        assertEquals(1.0f, lensCycle.overdueProgressFraction(LocalDate(2026, 2, 15)))
     }
 }
