@@ -16,11 +16,13 @@
 **Action required**: Add to `gradle/libs.versions.toml`:
 ```toml
 [versions]
-kotlinx-datetime = "0.6.2"
+kotlinx-datetime = "0.7.1"
 
 [libraries]
 kotlinx-datetime = { module = "org.jetbrains.kotlinx:kotlinx-datetime", version.ref = "kotlinx-datetime" }
 ```
+
+**Version note**: Originally pinned at 0.6.2, but Compose Multiplatform's iOS artifacts transitively pull in kotlinx-datetime 0.7.1, so the two platforms resolved different (incompatible) `Clock` types — 0.6.2 has its own `kotlinx.datetime.Clock` class, while 0.7.1 makes it a deprecated typealias for `kotlin.time.Clock`. Bumped the declared version to 0.7.1 to match what iOS already resolves and keep both platforms on one consistent API (`kotlin.time.Clock`, used with `@OptIn(ExperimentalTime::class)`).
 Add to `composeApp/build.gradle.kts` `commonMain.dependencies`:
 ```kotlin
 implementation(libs.kotlinx.datetime)

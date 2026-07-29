@@ -10,7 +10,7 @@ Build a single-screen KMP mobile app (Android + iOS) that tracks a contact lens 
 ## Technical Context
 
 **Language/Version**: Kotlin 2.3.21 (KMP), Compose Multiplatform 1.10.3  
-**Primary Dependencies**: Room 3.0.0-alpha03, Koin 4.2.1, kotlinx-datetime 0.6.2 (to add), kotlinx.serialization 1.11.0  
+**Primary Dependencies**: Room 3.0.0-alpha03, Koin 4.2.1, kotlinx-datetime 0.7.1 (to add), kotlinx.serialization 1.11.0  
 **Storage**: Room 3 KMP alpha — single `lens_cycle` table, singleton row (id=1), auto-migration enabled from version 1  
 **Testing**: `kotlin.test` in `commonTest` — unit tests for date calculation and state logic, no device/emulator required  
 **Target Platform**: Android min SDK 31 + iOS 17.0 (single `:composeApp` KMP module)  
@@ -28,7 +28,7 @@ Build a single-screen KMP mobile app (Android + iOS) that tracks a contact lens 
 | I. Multiplatform-First | ✅ PASS | All domain logic, Room entities/DAOs, and ViewModels in `commonMain`. Only notification scheduling and Room builder in platform source sets. |
 | II. Expect/Actual Minimalism | ✅ PASS | `expect`/`actual` used only for the Room database factory function (unavoidable). `NotificationScheduler` uses interface + Koin DI. |
 | III. Library-First | ✅ PASS | Single `:composeApp` module is appropriate for this app scope. Clean package layering achieves separation of concerns without premature module splits. |
-| IV. Build Must Stay Green | ✅ PASS | `kotlinx-datetime` 0.6.2 added to `libs.versions.toml`; Room 3 alpha locked at `3.0.0-alpha03`; no version auto-upgrades. |
+| IV. Build Must Stay Green | ✅ PASS | `kotlinx-datetime` pinned to 0.7.1 in `libs.versions.toml` (matches what Compose Multiplatform's iOS artifacts already pull in transitively — 0.6.2 resolved inconsistently across Android/iOS klibs and broke `Clock` usage in `commonMain`); Room 3 alpha locked at `3.0.0-alpha03`; no other version auto-upgrades. |
 | V. Deterministic, Testable Logic | ✅ PASS | `LensCycle` member functions (pure: nextChangeDate, daysRemaining, isOverdue, progressFraction) live in `commonMain` and are fully unit-testable without device. |
 
 **Post-design re-check**: No violations introduced. The single `expect`/`actual` for the Room database builder is justified (no multiplatform builder API exists) and documented in Complexity Tracking.

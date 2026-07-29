@@ -34,7 +34,7 @@ Before implementing, add to `gradle/libs.versions.toml`:
 
 ```toml
 [versions]
-kotlinx-datetime = "0.6.2"
+kotlinx-datetime = "0.7.1"
 
 [libraries]
 kotlinx-datetime = { module = "org.jetbrains.kotlinx:kotlinx-datetime", version.ref = "kotlinx-datetime" }
