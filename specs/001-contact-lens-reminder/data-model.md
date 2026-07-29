@@ -17,7 +17,7 @@ The single entity representing the user's active lens replacement cycle. Stored 
 | `startDate` | `LocalDate` | TEXT (ISO-8601, e.g. `"2026-05-01"`) | The date the user put on the current pair |
 | `interval` | `ReminderInterval` | TEXT (enum name) | Replacement schedule |
 | `reminderHour` | `Int` | INTEGER | Hour of day for daily notification (0–23) |
-| `reminderMinute` | `Int` | INTEGER | Minute of day for daily notification (0–59) |
+| `reminderMinute` | `Int` | INTEGER | Minute of day for daily notification (0–59 in storage; UI only offers 15-minute steps — 0/15/30/45) |
 
 **TypeConverters required** (registered on `@Database`):
 - `LocalDate` ↔ `String`: `LocalDate.toString()` / `LocalDate.parse()`
@@ -53,7 +53,7 @@ The single entity representing the user's active lens replacement cycle. Stored 
 |-------|------|-------|
 | `startDate` | Must not be in the future | "Start date cannot be in the future" |
 | `reminderHour` | `0 ≤ hour ≤ 23` | Not user-facing; enforced by time picker |
-| `reminderMinute` | `0 ≤ minute ≤ 59` | Not user-facing; enforced by time picker |
+| `reminderMinute` | `minute ∈ {0, 15, 30, 45}` | Not user-facing; enforced by the minute dropdown (`ReminderTimePicker` offers only 15-minute steps) |
 
 ---
 
@@ -99,3 +99,36 @@ Database name: `"lens_tracker.db"`
 - There is always at most one `LensCycle` row (id=1). Use `INSERT OR REPLACE` semantics via `@Upsert`.
 - `nextChangeDate` is intentionally not stored to avoid staleness; it is always re-derived.
 - `reminderTime` is stored as hour+minute integers rather than a serialized time object to keep the schema simple and avoid any `kotlinx-datetime` serialization edge cases in Room TypeConverters.
+
+---
+
+## UI-Only State (not persisted)
+
+Added to support User Story 4 (Settings & Notification Management) and the navigation/modal requirements (FR-008–FR-012). None of this is stored in Room — it is transient Compose/ViewModel state, re-derived or reset on process death like any other UI state.
+
+### AppScreen (sealed class)
+
+| Value | Meaning |
+|-------|---------|
+| `Main` | The default/status screen (User Stories 1–3) |
+| `Settings` | Reminder time + notification permission management (User Story 4) |
+
+Held as a single piece of state in the app root composable — not a back stack, since there are only two destinations and no deep-linking requirement.
+
+### HomeUiState additions
+
+| Field | Type | Description |
+|-------|------|--------------|
+| `showDatePicker` | `Boolean` | Whether the native date-picker dialog is open |
+| `showConfirmDialog` | `Boolean` | Whether the "Mark as Changed" confirmation is open |
+| `toastMessage` | `String?` | Non-null while a transient confirmation message (FR-012) should be shown; auto-clears after a short delay |
+
+### SettingsUiState (new)
+
+| Field | Type | Description |
+|-------|------|--------------|
+| `reminderHour` | `Int` | Current reminder hour (0–23), sourced from `LensCycle` |
+| `reminderMinute` | `Int` | Current reminder minute (0/15/30/45), sourced from `LensCycle` |
+| `hasNotificationPermission` | `Boolean` | Current permission status from `NotificationScheduler.hasPermission()` |
+| `permissionRequestInFlight` | `Boolean` | `true` while an in-progress `requestPermission()` call is pending, to disable the Enable control from double-firing |
+| `toastMessage` | `String?` | Non-null while a transient confirmation message (FR-012) should be shown — set when `requestPermission()` resolves `true` (permission granted); auto-clears after a short delay, same pattern as `HomeUiState.toastMessage` |

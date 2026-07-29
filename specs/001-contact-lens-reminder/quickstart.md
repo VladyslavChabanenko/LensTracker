@@ -97,6 +97,16 @@ From CLI (simulator only):
 
 ---
 
+## Test Settings & notification permission re-request
+
+1. Open the app, tap the gear icon on the main screen — you should land on the Settings screen with the current reminder time and notification permission status.
+2. Change the reminder time and navigate back (back control) — the main screen's lens status should be unaffected, and the new time should apply to the next scheduled notification.
+3. Deny notification permission when first prompted, then go to Settings and tap "Enable" — on Android API 33+, the system dialog should reappear (first denial only); on a second denial, Android will stop showing the dialog and Settings should instead guide you to the app's system settings page.
+4. Confirm the main screen shows a persistent "Notifications are off" banner whenever permission is denied, with a path into Settings.
+5. On a fresh install (or after clearing the app's permission via system settings), go to Settings and tap "Enable", then grant the permission via the native prompt — the "Denied" status should clear and a brief confirmation toast should appear and auto-dismiss on its own.
+
+---
+
 ## Project conventions
 
 - All business logic in `commonMain` — no platform imports in `commonMain` source sets.

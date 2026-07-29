@@ -96,3 +96,35 @@ implementation(libs.kotlinx.datetime)
 **Decision**: Monthly = exactly 30 days (not calendar month).
 
 **Rationale**: Spec explicitly states "Monthly (30 days)". This avoids month-boundary complexity (28/29/30/31 days) and is simpler to implement and test. `kotlinx-datetime` `LocalDate.plus(30, DateTimeUnit.DAY)` is the correct implementation.
+
+---
+
+## 8. Main ↔ Settings navigation
+
+**Decision**: A `commonMain` sealed class `AppScreen { Main, Settings }` held as simple Compose state (`mutableStateOf`) in the app's root composable; the root switches between `HomeScreen`/`SettingsScreen` with a `when`.
+
+**Rationale**: The feature needs exactly two screens with no back stack, no deep links, and no multi-entry history — the imported design itself implements this as a single screen-state field, not a navigation stack. A state-driven switch is fully testable, requires zero new dependencies, and keeps the app in one Gradle module per Constitution III.
+
+**Alternatives considered**: `androidx.navigation:navigation-compose` (now common-source-set compatible) — rejected as unnecessary complexity for 2 screens with no back-stack requirements; would add a dependency and API surface (routes, `NavHost`, `NavController`) that this feature doesn't need.
+
+---
+
+## 9. In-app overlays (date picker, confirmation, permission)
+
+**Decision**: Render the date picker, the "Mark as Changed" confirmation, and (where applicable) any in-app permission explanation as Compose dialog composables driven by boolean flags in `HomeUiState`, not as separate screens or `AppScreen` destinations. The date picker specifically uses Compose Material3's native `DatePickerDialog`/`DatePicker` (already a `commonMain` dependency), configured with a `SelectableDates` implementation that disables future dates (FR-001), rather than a hand-rolled calendar grid.
+
+**Rationale**: Matches the imported design's treatment of these as overlays on top of the current screen rather than navigation destinations. Material3's `DatePicker` is a complete, accessible, cross-platform (Android + iOS via Compose Multiplatform) calendar widget out of the box, so there is no need to hand-roll cell generation, month navigation, or selection state — it also removes a chunk of custom pure-function test surface (the earlier `CalendarCell`/`buildCalendarCells` design) in favor of a single `SelectableDates.isSelectableDate(utcTimeMillis)` predicate.
+
+**Alternatives considered**: A dedicated "Date Picker" `AppScreen` destination — rejected; the design and spec (FR-001, edge cases) both treat it as a transient, dismissible overlay over the main screen, not a place a user navigates "to" or "back from". A hand-rolled `CalendarCell`/`buildCalendarCells` grid (the original design for this feature) — rejected in favor of Material3's built-in `DatePicker`, since it duplicates functionality the platform already provides for no added benefit.
+
+---
+
+## 10. Re-requesting notification permission from Settings
+
+**Decision**: Add `suspend fun requestPermission(): Boolean` to the existing `NotificationScheduler` interface (see updated `contracts/notification-scheduler.md`). Android implements it via a small Koin-scoped bridge (`AndroidPermissionBridge`: a `MutableSharedFlow<Unit>` signal + `CompletableDeferred<Boolean>` result) that the app's root composable services once with `rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission())` — this keeps the Activity-scoped API out of the scheduler class itself. iOS implements it directly with `UNUserNotificationCenter.requestAuthorizationWithOptions`, wrapped in `suspendCancellableCoroutine`, since no Activity/launcher concept exists there.
+
+**Rationale**: FR-011 requires Settings to let the user re-request permission after a denial. Android's runtime permission API can only be invoked from an Activity-scoped launcher, so the commonMain `NotificationScheduler` (a plain Koin singleton, not Activity-scoped) needs a bridge rather than calling the Android API directly. This keeps the platform abstraction in the same interface+DI shape as `hasPermission()`/`schedule()` (Constitution II) instead of introducing a new `expect`/`actual` Composable.
+
+**Permanently-denied fallback**: On Android, once the user has denied the permission and the system will no longer show the rationale (`shouldShowRequestPermissionRationale() == false` after a prior denial), calling `requestPermission()` again will not re-show the system dialog — it will return the current (denied) status immediately. In that case, the Settings screen's explanation (FR-011) must guide the user to the app's system settings page (`Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, ...)`) rather than retrying the in-app prompt indefinitely.
+
+**Alternatives considered**: Accompanist Permissions library — rejected; adds a dependency for a single permission that's already fully coverable with the first-party `androidx.activity:activity-compose` artifact already in the dependency graph.

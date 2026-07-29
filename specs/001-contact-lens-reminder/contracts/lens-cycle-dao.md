@@ -33,9 +33,9 @@ interface LensCycleDao {
 
 ## Usage contract
 
-- **Read path**: UI layer collects `observeLensCycle()` via `LensCycleRepository`, which exposes it as `Flow<LensCycleEntity?>` to `MainViewModel`.
-- **Write path**: `LensCycleRepository.save(lensCycle)` calls `upsertLensCycle()`; then triggers `NotificationScheduler.schedule()` with the new next trigger time.
-- **Reset path**: `LensCycleRepository.markAsChanged()` creates a new `LensCycleEntity` with `startDate = today` (same interval and reminderTime), calls `upsertLensCycle()`, then reschedules the notification.
+- **Read path**: UI layer collects `observe()` via `LensCycleRepository`, which exposes it as `Flow<LensCycle?>` (the domain model, not the entity) to `HomeViewModel`. `LensCycleRepositoryImpl` maps `LensCycleEntity` → `LensCycle` internally before emitting.
+- **Write path**: `LensCycleRepository.save(lensCycle)` maps the domain `LensCycle` to a `LensCycleEntity` internally, then calls `upsertLensCycle()`; then triggers `NotificationScheduler.schedule()` with the new next trigger time.
+- **Reset path**: `LensCycleRepository.markAsChanged()` creates a new `LensCycle` with `startDate = today` (same interval and reminderTime), maps it to a `LensCycleEntity` internally, calls `upsertLensCycle()`, then reschedules the notification.
 - **No delete**: The singleton row is never deleted; it is always replaced.
 
 ---

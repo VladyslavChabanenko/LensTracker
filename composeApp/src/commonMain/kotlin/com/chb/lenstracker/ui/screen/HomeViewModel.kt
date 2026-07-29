@@ -5,8 +5,6 @@ import androidx.lifecycle.viewModelScope
 import com.chb.lenstracker.data.repository.LensCycleRepository
 import com.chb.lenstracker.domain.model.LensCycle
 import com.chb.lenstracker.domain.model.ReminderInterval
-import com.chb.lenstracker.domain.model.toDomain
-import com.chb.lenstracker.domain.model.toEntity
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.map
@@ -40,7 +38,7 @@ class HomeViewModel(
 ) : ViewModel() {
 
     val uiState: StateFlow<HomeUiState> = repository.observe()
-        .map { entity -> entity?.toDomain().toUiState() }
+        .map { it.toUiState() }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), HomeUiState())
 
     fun onEvent(event: HomeUiEvent) {
@@ -62,7 +60,7 @@ class HomeViewModel(
             reminderHour = current?.reminderHour ?: DEFAULT_REMINDER_HOUR,
             reminderMinute = current?.reminderMinute ?: DEFAULT_REMINDER_MINUTE
         )
-        viewModelScope.launch { repository.save(lensCycle.toEntity()) }
+        viewModelScope.launch { repository.save(lensCycle) }
     }
 
     @OptIn(ExperimentalTime::class)

@@ -1,23 +1,25 @@
 # Implementation Plan: Contact Lens Reminder
 
-**Branch**: `001-lens-tracker` | **Date**: 2026-05-04 | **Spec**: [spec.md](spec.md)  
+**Branch**: `001-lens-tracker` | **Date**: 2026-07-29 | **Spec**: [spec.md](spec.md)
 **Input**: Feature specification from `/specs/001-contact-lens-reminder/spec.md`
 
 ## Summary
 
-Build a single-screen KMP mobile app (Android + iOS) that tracks a contact lens replacement cycle: users set a start date and interval (Daily/Weekly/2-Weeks/Monthly), see a progress bar with days remaining or overdue status, and receive a local notification at a user-chosen time of day when lenses are due. All state persists in a local Room 3 database; notifications survive device reboots via platform-specific scheduling (AlarmManager on Android, UNUserNotificationCenter on iOS).
+Build a two-screen KMP mobile app (Android + iOS) that tracks a contact lens replacement cycle. The **Main screen** shows lens status, start date, replacement interval, and a "Mark as Changed" control; a **Settings screen** — reached via a gear icon and returned from via a back control — holds the reminder time and notification permission status. Date selection uses Compose Material3's native `DatePickerDialog` (with `selectableDates` disabling future dates) rather than a hand-rolled calendar grid; the "Mark as Changed" confirmation and notification permission requests are presented as transient dialogs rather than additional screens, plus brief auto-dismissing confirmation messages after key actions. All state persists in a local Room 3 database; notifications survive device reboots via platform-specific scheduling (AlarmManager on Android, UNUserNotificationCenter on iOS).
+
+This plan supersedes the original single-screen plan to account for spec.md's User Story 4 (Settings & Notification Management) and the associated navigation/modal requirements (FR-008–FR-012). The core domain model (`LensCycle`, `ReminderInterval`) and data layer (Room schema, DAO, repository) are unchanged — this update is additive at the UI/navigation layer plus one new cross-platform capability (in-app notification-permission re-request). The custom `CalendarCell`/`buildCalendarCells`/`CalendarOverlay` approach from the earlier revision of this plan has been dropped in favor of Compose Material3's built-in `DatePicker`, which is already a `commonMain` dependency and needs no new pure-function test surface.
 
 ## Technical Context
 
-**Language/Version**: Kotlin 2.3.21 (KMP), Compose Multiplatform 1.10.3  
-**Primary Dependencies**: Room 3.0.0-alpha03, Koin 4.2.1, kotlinx-datetime 0.7.1 (to add), kotlinx.serialization 1.11.0  
-**Storage**: Room 3 KMP alpha — single `lens_cycle` table, singleton row (id=1), auto-migration enabled from version 1  
-**Testing**: `kotlin.test` in `commonTest` — unit tests for date calculation and state logic, no device/emulator required  
-**Target Platform**: Android min SDK 31 + iOS 17.0 (single `:composeApp` KMP module)  
-**Project Type**: Mobile app (KMP, Compose Multiplatform)  
-**Performance Goals**: App state loads instantly from Room (single row); notification fires within 5 min of scheduled time (SC-002)  
-**Constraints**: Offline-only (no backend); notifications must survive device reboot (FR-004); future start dates forbidden (FR-001)  
-**Scale/Scope**: 1 screen, 1 entity, 1 notification slot per user
+**Language/Version**: Kotlin 2.3.21 (KMP), Compose Multiplatform 1.10.3
+**Primary Dependencies**: Room 3.0.0-alpha03, Koin 4.2.1, kotlinx-datetime 0.7.1, kotlinx.serialization 1.11.0, androidx.activity:activity-compose 1.13.0 (already present in `androidMain`, now also backs the permission-request launcher)
+**Storage**: Room 3 KMP alpha — unchanged single `lens_cycle` table, singleton row (id=1); no schema changes required for this feature (reminder hour/minute already present)
+**Testing**: `kotlin.test` in `commonTest` — unit tests for date/calendar calculations and ViewModel state reducers, no device/emulator required
+**Target Platform**: Android min SDK 31 + iOS 17.0 (single `:composeApp` KMP module)
+**Project Type**: Mobile app (KMP, Compose Multiplatform) — 2 screens (Main, Settings) with overlay/dialog interactions
+**Performance Goals**: App state loads instantly from Room (single row); notification fires within 5 min of scheduled time (SC-002); navigating Main ↔ Settings and opening/closing overlays must feel instant (single Compose recomposition, no I/O on the navigation path)
+**Constraints**: Offline-only (no backend); notifications must survive device reboot (FR-004); future start dates forbidden (FR-001); Android's "don't ask again" permission policy means `requestPermission()` cannot always show a system dialog — Settings must fall back to guiding the user to the app's system settings page (FR-011)
+**Scale/Scope**: 2 screens (Main, Settings), 1 entity, 1 notification slot per user, 3 overlay/dialog interactions (date-picker calendar, mark-as-changed confirmation, notification-permission request), transient toast-style confirmation feedback
 
 ## Constitution Check
 
@@ -25,13 +27,16 @@ Build a single-screen KMP mobile app (Android + iOS) that tracks a contact lens 
 
 | Principle | Status | Notes |
 |-----------|--------|-------|
-| I. Multiplatform-First | ✅ PASS | All domain logic, Room entities/DAOs, and ViewModels in `commonMain`. Only notification scheduling and Room builder in platform source sets. |
-| II. Expect/Actual Minimalism | ✅ PASS | `expect`/`actual` used only for the Room database factory function (unavoidable). `NotificationScheduler` uses interface + Koin DI. |
-| III. Library-First | ✅ PASS | Single `:composeApp` module is appropriate for this app scope. Clean package layering achieves separation of concerns without premature module splits. |
-| IV. Build Must Stay Green | ✅ PASS | `kotlinx-datetime` pinned to 0.7.1 in `libs.versions.toml` (matches what Compose Multiplatform's iOS artifacts already pull in transitively — 0.6.2 resolved inconsistently across Android/iOS klibs and broke `Clock` usage in `commonMain`); Room 3 alpha locked at `3.0.0-alpha03`; no other version auto-upgrades. |
-| V. Deterministic, Testable Logic | ✅ PASS | `LensCycle` member functions (pure: nextChangeDate, daysRemaining, isOverdue, progressFraction) live in `commonMain` and are fully unit-testable without device. |
+| I. Multiplatform-First | ✅ PASS | Navigation state (`AppScreen`), overlay/dialog state, and calendar-cell generation are all plain `commonMain` state and pure functions. Only the permission-request bridge has platform-specific wiring (behind the existing `NotificationScheduler` interface). |
+| II. Expect/Actual Minimalism | ✅ PASS | No new `expect`/`actual` introduced. The new `NotificationScheduler.requestPermission()` method is implemented per-platform via the existing interface + Koin DI pattern (Android bridges to an `ActivityResultLauncher` via a Koin-scoped signal/deferred pair; iOS calls `UNUserNotificationCenter` directly) — same pattern as `hasPermission()`/`schedule()` already use. Considered an `expect`/`actual` Composable wrapper instead; rejected because it duplicates what the interface+DI pattern already does more simply. |
+| III. Library-First | ✅ PASS | Still a single `:composeApp` module. Settings screen and overlays live in the existing `ui/` package; no new modules or navigation library needed for a 2-screen app with no back stack complexity. |
+| IV. Build Must Stay Green | ✅ PASS | No dependency version changes. `androidx-activity-compose` is already declared and already in `androidMain.dependencies` — reused, not added. |
+| V. Deterministic, Testable Logic | ✅ PASS | `HomeUiState`/`SettingsUiState` reducers are pure `commonMain` functions, unit-testable without a device, following the existing `LensCycle` pattern. Date selection itself now delegates to Compose Material3's `DatePicker`, so there is no custom calendar-cell logic to unit test. |
+| VI. Requirement-Driven TDD | ✅ PASS (commitment) | Tasks for FR-008–FR-012 will follow Red→Green→Refactor: tests for calendar-cell edge cases, reminder-time update, and permission-status derivation are written from the User Story 4 acceptance scenarios before implementation. |
+| VII. Dependency Guardrails | ✅ PASS | UI state classes live in `ui/`, not `domain/`; the domain model (`LensCycle`, `ReminderInterval`) is untouched by this feature. `SettingsViewModel` depends on `LensCycleRepository` and `NotificationScheduler` abstractions only, matching the existing `HomeViewModel` boundary pattern. |
+| SOLID Principles | ✅ PASS | Settings gets its own `SettingsViewModel` (Single Responsibility) rather than growing `HomeViewModel`; both depend on the same repository/scheduler abstractions (Dependency Inversion), consistent with existing code. |
 
-**Post-design re-check**: No violations introduced. The single `expect`/`actual` for the Room database builder is justified (no multiplatform builder API exists) and documented in Complexity Tracking.
+**Post-design re-check**: No violations introduced. The Android permission-request bridge is interface+DI, not `expect`/`actual`, so the existing Complexity Tracking entry (Room DB factory) remains the only justified `expect`/`actual` in the codebase.
 
 ## Project Structure
 
@@ -39,14 +44,14 @@ Build a single-screen KMP mobile app (Android + iOS) that tracks a contact lens 
 
 ```text
 specs/001-contact-lens-reminder/
-├── plan.md              # This file (/speckit-plan command output)
-├── research.md          # Phase 0 output
-├── data-model.md        # Phase 1 output
-├── quickstart.md        # Phase 1 output
+├── plan.md              # This file (/speckit-plan command output) — updated for Settings/navigation/modals
+├── research.md          # Phase 0 output — updated with navigation, overlay, and permission-request research
+├── data-model.md        # Phase 1 output — updated with UI-only state (AppScreen)
+├── quickstart.md        # Phase 1 output — updated with Settings/permission testing steps
 ├── contracts/
-│   ├── lens-cycle-dao.md        # Room DAO contract
-│   └── notification-scheduler.md # Platform notification interface contract
-└── tasks.md             # Phase 2 output (/speckit-tasks command)
+│   ├── lens-cycle-dao.md         # Room DAO contract (unchanged)
+│   └── notification-scheduler.md # Updated: adds requestPermission() to the contract
+└── tasks.md             # Phase 2 output (/speckit-tasks command) — needs regeneration for this scope
 ```
 
 ### Source Code (repository root)
@@ -55,49 +60,38 @@ specs/001-contact-lens-reminder/
 composeApp/src/
 ├── commonMain/kotlin/com/chb/lenstracker/
 │   ├── di/
-│   │   └── AppModule.kt            # Shared Koin module (DB, repository, use cases)
+│   │   └── AppModule.kt                # Unchanged
 │   ├── domain/
 │   │   └── model/
-│   │       ├── LensCycle.kt        # Domain model + pure member fns: nextChangeDate, daysRemaining, isOverdue, progressFraction
-│   │       └── ReminderInterval.kt # Enum: DAILY, WEEKLY, TWO_WEEKS, MONTHLY
-│   ├── data/
-│   │   ├── db/
-│   │   │   ├── LensTrackerDatabase.kt  # @Database abstract class (commonMain)
-│   │   │   ├── LensCycleEntity.kt      # @Entity (id=1 singleton)
-│   │   │   ├── LensCycleDao.kt         # @Dao: observeLensCycle, getLensCycle, upsertLensCycle
-│   │   │   └── DateTypeConverter.kt    # LocalDate ↔ String TypeConverter
-│   │   └── repository/
-│   │       ├── LensCycleRepository.kt          # Interface: observe, save, markAsChanged
-│   │       └── LensCycleRepositoryImpl.kt      # Implementation: wraps DAO + schedules notification
+│   │       ├── LensCycle.kt            # Unchanged
+│   │       └── ReminderInterval.kt     # Unchanged
+│   ├── data/                           # Unchanged (db/, repository/)
 │   ├── notification/
-│   │   └── NotificationScheduler.kt    # Interface: schedule(LocalDateTime, title, body), cancel, hasPermission
+│   │   └── NotificationScheduler.kt    # UPDATED: + `suspend fun requestPermission(): Boolean`
 │   └── ui/
+│       ├── navigation/
+│       │   └── AppScreen.kt            # NEW: sealed class { Main, Settings }; hoisted as simple Compose state in the app root — no navigation library needed for 2 screens with no back stack
 │       ├── screen/
-│       │   ├── HomeScreen.kt           # Single-screen UI (status + setup combined)
-│       │   └── HomeViewModel.kt        # StateFlow<HomeUiState>, handles HomeUiEvent
+│       │   ├── HomeScreen.kt           # UPDATED: gear icon navigates to Settings; start-date field opens the native Material3 `DatePickerDialog`; "Mark as Changed" opens the confirm dialog; shows toast + denied-notifications banner
+│       │   ├── HomeViewModel.kt        # UPDATED: `HomeUiState` gains `showDatePicker`, `showConfirmDialog`, `toastMessage`
+│       │   ├── SettingsScreen.kt       # NEW: reminder time field, notification permission status + Enable control, back control; shows `ConfirmationToast` when permission is successfully granted
+│       │   └── SettingsViewModel.kt    # NEW: `SettingsUiState` (reminderHour/Minute, permissionStatus, toastMessage); events `UpdateReminderTime`, `RequestPermission`; sets `toastMessage` when `requestPermission()` resolves `true`
 │       └── component/
-│           ├── LensProgressBar.kt      # Progress bar (green→red when overdue)
-│           ├── IntervalSelector.kt     # Radio/chip group for ReminderInterval
-│           └── ReminderTimePicker.kt   # Time picker for hour/minute
+│           ├── LensProgressBar.kt      # Unchanged
+│           ├── IntervalSelector.kt     # Unchanged
+│           ├── ReminderTimePicker.kt   # Hour dropdown (0–23) + minute dropdown restricted to 15-minute steps (00/15/30/45), now rendered on SettingsScreen instead of HomeScreen
+│           ├── ConfirmDialog.kt        # NEW: reusable Yes/No confirmation dialog (used by "Mark as Changed")
+│           └── ConfirmationToast.kt    # NEW: transient, auto-dismissing confirmation banner; reused by both HomeScreen (Mark as Changed) and SettingsScreen (permission granted)
 ├── androidMain/kotlin/com/chb/lenstracker/
-│   ├── di/
-│   │   └── AndroidAppModule.kt         # Android Koin module: DB builder, AndroidNotificationScheduler
-│   ├── data/db/
-│   │   └── DatabaseFactory.android.kt  # actual createDatabase(): uses AndroidSQLiteDriver + Context
 │   └── notification/
-│       ├── AndroidNotificationScheduler.kt  # AlarmManager.setExactAndAllowWhileIdle()
-│       ├── NotificationReceiver.kt          # BroadcastReceiver: posts notification + chains next alarm
-│       └── BootReceiver.kt                  # BroadcastReceiver: BOOT_COMPLETED → reschedule
+│       ├── AndroidNotificationScheduler.kt  # UPDATED: `requestPermission()` delegates to `AndroidPermissionBridge`
+│       └── AndroidPermissionBridge.kt       # NEW: Koin singleton — `MutableSharedFlow<Unit>` request signal + `CompletableDeferred<Boolean>` result; the app root composable collects the signal once via `rememberLauncherForActivityResult(RequestPermission())` and resolves the deferred with the result
 └── iosMain/kotlin/com/chb/lenstracker/
-    ├── di/
-    │   └── IosAppModule.kt             # iOS Koin module: DB builder, IosNotificationScheduler
-    ├── data/db/
-    │   └── DatabaseFactory.ios.kt      # actual createDatabase(): uses BundledSQLiteDriver + NSHomeDirectory
     └── notification/
-        └── IosNotificationScheduler.kt # UNUserNotificationCenter + UNCalendarNotificationTrigger
+        └── IosNotificationScheduler.kt  # UPDATED: `requestPermission()` wraps `UNUserNotificationCenter.requestAuthorizationWithOptions` in `suspendCancellableCoroutine` — no bridge needed, no Activity dependency on iOS
 ```
 
-**Structure Decision**: Single `:composeApp` KMP module. All shared logic in `commonMain` packages; platform-specific code confined to narrow `androidMain`/`iosMain` packages (`di/`, `data/db/`, `notification/`). No new Gradle modules created.
+**Structure Decision**: Still a single `:composeApp` KMP module — no new Gradle modules, no navigation library added. Screen switching is plain `commonMain` Compose state (`AppScreen`) because there are only two screens and no back-stack/deep-link requirements; this mirrors the imported design prototype's own approach (a screen-state field, not a navigation stack). The one new platform-specific concern — requesting notification permission from the Settings screen — reuses the established interface+DI abstraction (`NotificationScheduler`) rather than introducing new `expect`/`actual` surface.
 
 ## Complexity Tracking
 

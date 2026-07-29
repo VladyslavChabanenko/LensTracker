@@ -1,6 +1,5 @@
 package com.chb.lenstracker.domain.model
 
-import com.chb.lenstracker.data.db.LensCycleEntity
 import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.plus
@@ -35,17 +34,3 @@ data class LensCycle(
 
     fun isOverdue(today: LocalDate): Boolean = daysRemaining(today) < 0
 }
-
-fun LensCycleEntity.toDomain(): LensCycle = LensCycle(
-    startDate = LocalDate.parse(startDate),
-    interval = ReminderInterval.valueOf(interval),
-    reminderHour = reminderHour,
-    reminderMinute = reminderMinute
-)
-
-fun LensCycle.toEntity(): LensCycleEntity = LensCycleEntity(
-    startDate = startDate.toString(),
-    interval = interval.name,
-    reminderHour = reminderHour,
-    reminderMinute = reminderMinute
-)
