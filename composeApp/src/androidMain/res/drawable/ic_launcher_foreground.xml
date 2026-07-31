@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?><!--
+  App icon "Almond eye" — foreground mark: a white eye with an accent iris.
+  Proportions are the design's (eye 78x44 of a 120 tile, iris 26), scaled to the
+  adaptive icon's 72dp visible area so the mark reads the same as the source tile.
+-->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <!-- Eye -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M30.6,54a23.4,13.2 0 1 1 46.8,0a23.4,13.2 0 1 1 -46.8,0z" />
+    <!-- Iris -->
+    <path
+        android:fillColor="#0088B0"
+        android:pathData="M54,46.2a7.8,7.8 0 1 1 0,15.6a7.8,7.8 0 1 1 0,-15.6z" />
+</vector>

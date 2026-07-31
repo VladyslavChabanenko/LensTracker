@@ -58,8 +58,8 @@ interface NotificationScheduler {
 
 ## Android implementation notes (`AndroidNotificationScheduler`)
 
-- Uses `AlarmManager.setExactAndAllowWhileIdle()` to fire a `PendingIntent` targeting `NotificationReceiver`.
-- `NotificationReceiver` (BroadcastReceiver) posts the notification and schedules the next alarm (same time next day — repeating via chained alarms, since `setRepeating()` is inexact on API 19+).
+- Uses `AlarmManager.setAndAllowWhileIdle()` to fire a `PendingIntent` targeting `NotificationReceiver`. Inexact by design — no exact-alarm permission is requested (research.md #2).
+- `NotificationReceiver` (BroadcastReceiver) posts the notification and schedules the next alarm (a day later — repeating via chained alarms, since `setRepeating()` cannot target a time of day).
 - `BootReceiver` listens for `BOOT_COMPLETED` / `LOCKED_BOOT_COMPLETED` and calls `schedule()` again with data from Room.
 - `cancel()` calls `AlarmManager.cancel()` with the same `PendingIntent`.
 - `hasPermission()`: on API 33+, checks `POST_NOTIFICATIONS`; on API 31–32, returns `true`.
@@ -70,8 +70,6 @@ interface NotificationScheduler {
 ```xml
 <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>
 <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
-<uses-permission android:name="android.permission.USE_EXACT_ALARM"/>
-<uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM"/>
 
 <receiver android:name=".receiver.NotificationReceiver" android:exported="false"/>
 <receiver android:name=".receiver.BootReceiver" android:exported="false">

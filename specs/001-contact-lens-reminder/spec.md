@@ -119,7 +119,7 @@ As a user, I want a separate Settings screen where I can adjust my reminder time
 ### Measurable Outcomes
 
 - **SC-001**: Users can set up their first reminder in under 30 seconds.
-- **SC-002**: Reminders are delivered within 5 minutes of the scheduled time.
+- **SC-002**: Reminders are delivered within 15 minutes of the scheduled time. Reminders are scheduled inexactly so the OS can batch them for battery; a lens change is a same-day task, so this tolerance costs the user nothing.
 - **SC-003**: App state persists correctly after a device reboot or app force-close.
 - **SC-004**: Users can find and update their reminder-time setting in under 20 seconds from app launch.
 

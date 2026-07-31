@@ -1,3 +1,10 @@
 <resources>
     <string name="app_name">LensTracker</string>
+
+    <!-- Reminder notification. Lives here rather than in composeResources because the
+         BroadcastReceivers that post it have no Compose context to resolve `Res.string` from. -->
+    <string name="notification_channel_name">Lens reminders</string>
+    <string name="notification_channel_description">Reminds you when it\'s time to change your contact lenses</string>
+    <string name="notification_title">Time to change your lenses</string>
+    <string name="notification_body">Your contact lenses are due for a replacement.</string>
 </resources>

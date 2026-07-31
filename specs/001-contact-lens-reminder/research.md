@@ -32,15 +32,13 @@ implementation(libs.kotlinx.datetime)
 
 ## 2. Android notification scheduling — AlarmManager vs WorkManager
 
-**Decision**: Use `AlarmManager.setExactAndAllowWhileIdle()` with a `BroadcastReceiver`.
+**Decision**: Use `AlarmManager.setAndAllowWhileIdle()` (inexact) with a `BroadcastReceiver`.
 
-**Rationale**: SC-002 requires reminders within 5 minutes of the scheduled time. `WorkManager` has a minimum interval of 15 minutes and does not guarantee exact firing time, making it unsuitable. `AlarmManager.setExactAndAllowWhileIdle()` fires even in Doze mode.
+**Rationale**: A lens-replacement reminder is a daily-granularity nudge, so exact firing is not worth what it costs: `USE_EXACT_ALARM` is a Play-restricted permission needing a policy declaration, and `SCHEDULE_EXACT_ALARM` needs user approval on API 31–32 — which in turn needs a runtime `canScheduleExactAlarms()` fallback and a denial banner. `setAndAllowWhileIdle()` requires no permission, still fires during Doze (the OS grants each app one such alarm roughly every 9 minutes), and stays inside SC-002's tolerance.
 
-**Permissions required** (in `AndroidManifest.xml`):
-- API 33+ (`USE_EXACT_ALARM`): auto-granted for reminder/calendar apps, no user prompt needed.
-- API 31–32 (`SCHEDULE_EXACT_ALARM`): requires user approval. If denied, fall back to `setAndAllowWhileIdle()` (inexact) and show warning banner in UI.
+**Permissions required** for scheduling: none.
 
-**Alternatives considered**: `WorkManager` — rejected (15-min minimum). `JobScheduler` — rejected (same imprecision issue for exact timing).
+**Alternatives considered**: `setExactAndAllowWhileIdle()` — rejected; minute-level precision does not change user behaviour here and drags in the permission and fallback branches above. `WorkManager` — rejected (15-minute floor on periodic work, no time-of-day targeting). `JobScheduler` — rejected (same, one level lower).
 
 ---
 

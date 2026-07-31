@@ -17,7 +17,7 @@ This plan supersedes the original single-screen plan to account for spec.md's Us
 **Testing**: `kotlin.test` in `commonTest` — unit tests for date/calendar calculations and ViewModel state reducers, no device/emulator required
 **Target Platform**: Android min SDK 31 + iOS 17.0 (single `:composeApp` KMP module)
 **Project Type**: Mobile app (KMP, Compose Multiplatform) — 2 screens (Main, Settings) with overlay/dialog interactions
-**Performance Goals**: App state loads instantly from Room (single row); notification fires within 5 min of scheduled time (SC-002); navigating Main ↔ Settings and opening/closing overlays must feel instant (single Compose recomposition, no I/O on the navigation path)
+**Performance Goals**: App state loads instantly from Room (single row); notification fires within 15 min of scheduled time (SC-002 — inexact alarms, no exact-alarm permission); navigating Main ↔ Settings and opening/closing overlays must feel instant (single Compose recomposition, no I/O on the navigation path)
 **Constraints**: Offline-only (no backend); notifications must survive device reboot (FR-004); future start dates forbidden (FR-001); Android's "don't ask again" permission policy means `requestPermission()` cannot always show a system dialog — Settings must fall back to guiding the user to the app's system settings page (FR-011)
 **Scale/Scope**: 2 screens (Main, Settings), 1 entity, 1 notification slot per user, 3 overlay/dialog interactions (date-picker calendar, mark-as-changed confirmation, notification-permission request), transient toast-style confirmation feedback
 
