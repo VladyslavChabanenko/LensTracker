@@ -11,6 +11,6 @@ import org.koin.dsl.module
 
 val appModule: Module = module {
     single<LensCycleDao> { get<LensTrackerDatabase>().lensCycleDao() }
-    single<LensCycleRepository> { LensCycleRepositoryImpl(get()) }
+    single<LensCycleRepository> { LensCycleRepositoryImpl(get(), get()) }
     viewModelOf(::HomeViewModel)
 }
