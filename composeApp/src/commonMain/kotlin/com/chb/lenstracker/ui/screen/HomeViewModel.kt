@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.chb.lenstracker.data.repository.LensCycleRepository
 import com.chb.lenstracker.domain.model.LensCycle
 import com.chb.lenstracker.domain.model.ReminderInterval
+import com.chb.lenstracker.notification.NotificationScheduler
 import com.chb.lenstracker.resources.Res
 import com.chb.lenstracker.resources.date_display_format
 import com.chb.lenstracker.resources.month_names
@@ -59,7 +60,8 @@ private const val DEFAULT_REMINDER_MINUTE = 0
 private val DEFAULT_INTERVAL = ReminderInterval.TWO_WEEKS
 
 class HomeViewModel(
-    private val repository: LensCycleRepository
+    private val repository: LensCycleRepository,
+    private val scheduler: NotificationScheduler
 ) : ViewModel() {
 
     private val showDatePicker = MutableStateFlow(false)
@@ -68,14 +70,18 @@ class HomeViewModel(
     // interval be picked before a start date). Ignored once a cycle exists; its interval wins.
     private val pendingInterval = MutableStateFlow(DEFAULT_INTERVAL)
 
+    private val hasNotificationPermission = MutableStateFlow(scheduler.hasPermission())
+
     val uiState: StateFlow<HomeUiState> = combine(
         repository.observe(),
         showDatePicker,
-        pendingInterval
-    ) { lensCycle, showDatePicker, pendingInterval ->
+        pendingInterval,
+        hasNotificationPermission
+    ) { lensCycle, showDatePicker, pendingInterval, hasNotificationPermission ->
         lensCycle.toUiState().copy(
             showDatePicker = showDatePicker,
-            selectedInterval = lensCycle?.interval ?: pendingInterval
+            selectedInterval = lensCycle?.interval ?: pendingInterval,
+            hasNotificationPermission = hasNotificationPermission
         )
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), HomeUiState())
 
@@ -113,7 +119,13 @@ class HomeViewModel(
             reminderHour = current?.reminderHour ?: DEFAULT_REMINDER_HOUR,
             reminderMinute = current?.reminderMinute ?: DEFAULT_REMINDER_MINUTE
         )
-        viewModelScope.launch { repository.save(lensCycle) }
+        viewModelScope.launch {
+            repository.save(lensCycle)
+            // First cycle just created — this is when the OS permission prompt should appear.
+            if (current == null) {
+                hasNotificationPermission.value = scheduler.requestPermission()
+            }
+        }
     }
 
     @OptIn(ExperimentalTime::class)
