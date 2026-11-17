@@ -34,6 +34,9 @@ import com.chb.lenstracker.domain.model.LensCycle
 import com.chb.lenstracker.domain.model.ReminderInterval
 import com.chb.lenstracker.resources.Res
 import com.chb.lenstracker.resources.action_cancel
+import com.chb.lenstracker.resources.action_mark_as_changed
+import com.chb.lenstracker.resources.confirm_mark_as_changed_body
+import com.chb.lenstracker.resources.confirm_mark_as_changed_title
 import com.chb.lenstracker.resources.action_ok
 import com.chb.lenstracker.resources.home_interval_label
 import com.chb.lenstracker.resources.home_start_date_label
@@ -47,6 +50,8 @@ import com.chb.lenstracker.resources.status_empty
 import com.chb.lenstracker.resources.status_kicker
 import com.chb.lenstracker.resources.status_next_change
 import com.chb.lenstracker.resources.status_today
+import com.chb.lenstracker.ui.component.ConfirmDialog
+import com.chb.lenstracker.ui.component.ConfirmationToast
 import com.chb.lenstracker.ui.component.IntervalSelector
 import com.chb.lenstracker.ui.component.LensProgressBar
 import com.chb.lenstracker.ui.component.MessageBannerSlot
@@ -99,75 +104,103 @@ private fun HomeScreenContent(
     val lensCycle = uiState.lensCycle
     val notificationsDisabledMessage = stringResource(Res.string.message_notifications_disabled)
 
-    Column(
-        modifier = modifier
-            .background(MaterialTheme.colorScheme.background)
-            .safeContentPadding()
-            .fillMaxSize(),
-        verticalArrangement = Arrangement.spacedBy(20.dp)
-    ) {
-        Column {
-            Text(text = stringResource(Res.string.home_title), style = ScreenTitleStyle, color = ColorAccent)
-        }
+    Box(modifier = modifier.fillMaxSize()) {
+        Column(
+            modifier = Modifier
+                .background(MaterialTheme.colorScheme.background)
+                .safeContentPadding()
+                .fillMaxSize(),
+            verticalArrangement = Arrangement.spacedBy(20.dp)
+        ) {
+            Column {
+                Text(text = stringResource(Res.string.home_title), style = ScreenTitleStyle, color = ColorAccent)
+            }
 
-        MessageBannerSlot(
-            messages = buildList {
-                if (!uiState.hasNotificationPermission) {
-                    add(
-                        UiMessage(
-                            text = notificationsDisabledMessage,
-                            severity = MessageSeverity.WARNING
+            MessageBannerSlot(
+                messages = buildList {
+                    if (!uiState.hasNotificationPermission) {
+                        add(
+                            UiMessage(
+                                text = notificationsDisabledMessage,
+                                severity = MessageSeverity.WARNING
+                            )
                         )
-                    )
+                    }
                 }
-            }
-        )
-
-        StatusCard(state = uiState.statusCard)
-
-        Column(verticalArrangement = Arrangement.spacedBy(5.dp)) {
-            Text(
-                text = stringResource(Res.string.home_start_date_label),
-                style = FieldLabelStyle,
-                color = ColorText.copy(alpha = 0.7f)
             )
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .heightIn(min = 36.dp)
-                    .clip(RoundedCornerShape(2.dp))
-                    .background(ColorSurface)
-                    .border(1.dp, ColorDivider, RoundedCornerShape(2.dp))
-                    .clickable { onEvent(HomeUiEvent.OpenDatePicker) }
-                    .padding(horizontal = 10.dp, vertical = 6.dp),
-                contentAlignment = Alignment.CenterStart
-            ) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
+
+            StatusCard(state = uiState.statusCard)
+
+            Column(verticalArrangement = Arrangement.spacedBy(5.dp)) {
+                Text(
+                    text = stringResource(Res.string.home_start_date_label),
+                    style = FieldLabelStyle,
+                    color = ColorText.copy(alpha = 0.7f)
+                )
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .heightIn(min = 36.dp)
+                        .clip(RoundedCornerShape(2.dp))
+                        .background(ColorSurface)
+                        .border(1.dp, ColorDivider, RoundedCornerShape(2.dp))
+                        .clickable { onEvent(HomeUiEvent.OpenDatePicker) }
+                        .padding(horizontal = 10.dp, vertical = 6.dp),
+                    contentAlignment = Alignment.CenterStart
                 ) {
-                    Text(
-                        text = uiState.startDateString
-                            ?: stringResource(Res.string.home_start_date_placeholder),
-                        style = InputTextStyle
-                    )
-                    Text(text = "▾", style = InputTextStyle, color = ColorText.copy(alpha = 0.5f))
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = uiState.startDateString
+                                ?: stringResource(Res.string.home_start_date_placeholder),
+                            style = InputTextStyle
+                        )
+                        Text(text = "▾", style = InputTextStyle, color = ColorText.copy(alpha = 0.5f))
+                    }
+                }
+            }
+
+            Column(verticalArrangement = Arrangement.spacedBy(5.dp)) {
+                Text(
+                    text = stringResource(Res.string.home_interval_label),
+                    style = FieldLabelStyle,
+                    color = ColorText.copy(alpha = 0.7f)
+                )
+                IntervalSelector(
+                    selected = uiState.selectedInterval,
+                    onSelect = { interval -> onEvent(HomeUiEvent.SelectInterval(interval)) }
+                )
+            }
+
+            if (lensCycle != null) {
+                Button(
+                    onClick = { onEvent(HomeUiEvent.OpenConfirmDialog) },
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text(stringResource(Res.string.action_mark_as_changed))
                 }
             }
         }
 
-        Column(verticalArrangement = Arrangement.spacedBy(5.dp)) {
-            Text(
-                text = stringResource(Res.string.home_interval_label),
-                style = FieldLabelStyle,
-                color = ColorText.copy(alpha = 0.7f)
-            )
-            IntervalSelector(
-                selected = uiState.selectedInterval,
-                onSelect = { interval -> onEvent(HomeUiEvent.SelectInterval(interval)) }
-            )
-        }
+        ConfirmationToast(
+            message = uiState.toastMessage,
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .safeContentPadding()
+        )
+    }
+
+    if (uiState.showConfirmDialog) {
+        ConfirmDialog(
+            title = stringResource(Res.string.confirm_mark_as_changed_title),
+            body = stringResource(Res.string.confirm_mark_as_changed_body),
+            confirmLabel = stringResource(Res.string.action_mark_as_changed),
+            onConfirm = { onEvent(HomeUiEvent.MarkAsChanged) },
+            onDismiss = { onEvent(HomeUiEvent.CloseConfirmDialog) }
+        )
     }
 
     if (uiState.showDatePicker) {

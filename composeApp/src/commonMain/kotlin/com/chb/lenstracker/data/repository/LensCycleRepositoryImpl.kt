@@ -10,6 +10,9 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.LocalTime
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.todayIn
+import kotlin.time.Clock
 import org.jetbrains.compose.resources.getString
 
 class LensCycleRepositoryImpl(
@@ -21,14 +24,22 @@ class LensCycleRepositoryImpl(
 
     override suspend fun save(lensCycle: LensCycle) {
         dao.upsertLensCycle(lensCycle.toEntity())
+        scheduleNext(lensCycle)
+    }
+
+    override suspend fun markAsChanged() {
+        val current = dao.getLensCycle()?.toDomain() ?: return
+        val renewed = current.copy(startDate = Clock.System.todayIn(TimeZone.currentSystemDefault()))
+        dao.upsertLensCycle(renewed.toEntity())
+        scheduler.cancel()
+        scheduleNext(renewed)
+    }
+
+    private suspend fun scheduleNext(lensCycle: LensCycle) {
         val nextTrigger = LocalDateTime(
             lensCycle.nextChangeDate(),
             LocalTime(lensCycle.reminderHour, lensCycle.reminderMinute)
         )
         scheduler.schedule(nextTrigger, getString(Res.string.notification_title), getString(Res.string.notification_body))
-    }
-
-    override suspend fun markAsChanged() {
-        TODO("Implemented in Phase 5 (T031)")
     }
 }

@@ -98,10 +98,10 @@
 ### Implementation for User Story 3
 
 - [X] T031 [P] [US3] Create a reusable `ConfirmDialog` composable (title, body, Cancel/Confirm actions) in `composeApp/src/commonMain/kotlin/com/chb/lenstracker/ui/component/ConfirmDialog.kt`
-- [ ] T032 [P] [US3] Create a reusable `ConfirmationToast` composable — a transient, auto-dismissing banner (FR-012) — in `composeApp/src/commonMain/kotlin/com/chb/lenstracker/ui/component/ConfirmationToast.kt`
-- [ ] T033 [US3] Implement `markAsChanged()` in `LensCycleRepositoryImpl` (replacing the `TODO`): create a new `LensCycleEntity` with `startDate = today` (same interval/reminder time), upsert, then `scheduler.cancel()` + `scheduler.schedule()` with the new next-change date in `composeApp/src/commonMain/kotlin/com/chb/lenstracker/data/repository/LensCycleRepositoryImpl.kt` (depends on T028)
-- [ ] T034 [US3] Add `showConfirmDialog: Boolean` and `toastMessage: String?` to `HomeUiState`; add `OpenConfirmDialog`, `CloseConfirmDialog` to `HomeUiEvent`; on `MarkAsChanged`, set `toastMessage` after the repository call completes and auto-clear it after a short delay in `composeApp/src/commonMain/kotlin/com/chb/lenstracker/ui/screen/HomeViewModel.kt`
-- [ ] T035 [US3] Add the "Mark as Changed" button to `HomeScreen`, opening `ConfirmDialog` (T031) before dispatching `MarkAsChanged`, and rendering `ConfirmationToast` (T032) when `toastMessage` is set, in `composeApp/src/commonMain/kotlin/com/chb/lenstracker/ui/screen/HomeScreen.kt` (depends on T031, T032, T034)
+- [X] T032 [P] [US3] Create a reusable `ConfirmationToast` composable — a transient, auto-dismissing banner (FR-012) — in `composeApp/src/commonMain/kotlin/com/chb/lenstracker/ui/component/ConfirmationToast.kt`
+- [X] T033 [US3] Implement `markAsChanged()` in `LensCycleRepositoryImpl` (replacing the `TODO`): create a new `LensCycleEntity` with `startDate = today` (same interval/reminder time), upsert, then `scheduler.cancel()` + `scheduler.schedule()` with the new next-change date in `composeApp/src/commonMain/kotlin/com/chb/lenstracker/data/repository/LensCycleRepositoryImpl.kt` (depends on T028)
+- [X] T034 [US3] Add `showConfirmDialog: Boolean` and `toastMessage: String?` to `HomeUiState`; add `OpenConfirmDialog`, `CloseConfirmDialog` to `HomeUiEvent`; on `MarkAsChanged`, set `toastMessage` after the repository call completes and auto-clear it after a short delay in `composeApp/src/commonMain/kotlin/com/chb/lenstracker/ui/screen/HomeViewModel.kt`
+- [X] T035 [US3] Add the "Mark as Changed" button to `HomeScreen`, opening `ConfirmDialog` (T031) before dispatching `MarkAsChanged`, and rendering `ConfirmationToast` (T032) when `toastMessage` is set, in `composeApp/src/commonMain/kotlin/com/chb/lenstracker/ui/screen/HomeScreen.kt` (depends on T031, T032, T034)
 
 **Checkpoint**: User Stories 1–3 independently functional — full single-screen reminder flow usable end-to-end
 
