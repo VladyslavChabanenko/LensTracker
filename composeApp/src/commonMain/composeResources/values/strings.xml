@@ -44,6 +44,9 @@
     <string name="confirm_mark_as_changed_body">This restarts your replacement cycle from today.</string>
     <string name="toast_marked_as_changed">Lenses marked as changed</string>
 
+    <!-- Settings -->
+    <string name="toast_notifications_enabled">Notifications enabled</string>
+
     <!-- Actions -->
     <string name="action_ok">OK</string>
     <string name="action_cancel">Cancel</string>

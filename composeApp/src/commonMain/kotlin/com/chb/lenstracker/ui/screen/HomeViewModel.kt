@@ -63,10 +63,10 @@ sealed class HomeUiEvent {
     data class SelectInterval(val interval: ReminderInterval) : HomeUiEvent()
 }
 
-private const val DEFAULT_REMINDER_HOUR = 9
-private const val DEFAULT_REMINDER_MINUTE = 0
+internal const val DEFAULT_REMINDER_HOUR = 9
+internal const val DEFAULT_REMINDER_MINUTE = 0
 private val DEFAULT_INTERVAL = ReminderInterval.TWO_WEEKS
-private const val TOAST_DURATION_MS = 3000L
+internal const val TOAST_DURATION_MS = 3000L
 
 class HomeViewModel(
     private val repository: LensCycleRepository,
