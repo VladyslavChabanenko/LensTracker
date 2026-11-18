@@ -101,9 +101,10 @@ From CLI (simulator only):
 
 1. Open the app, tap the gear icon on the main screen — you should land on the Settings screen with the current reminder time and notification permission status.
 2. Change the reminder time and navigate back (back control) — the main screen's lens status should be unaffected, and the new time should apply to the next scheduled notification.
-3. Deny notification permission when first prompted, then go to Settings and tap "Enable" — on Android API 33+, the system dialog should reappear (first denial only); on a second denial, Android will stop showing the dialog and Settings should instead guide you to the app's system settings page.
-4. Confirm the main screen shows a persistent "Notifications are off" banner whenever permission is denied, with a path into Settings.
-5. On a fresh install (or after clearing the app's permission via system settings), go to Settings and tap "Enable", then grant the permission via the native prompt — the "Denied" status should clear and a brief confirmation toast should appear and auto-dismiss on its own.
+3. (Header check) Both screens show their title centered; Home has an icon-only gear at the end and Settings an icon-only back arrow at the start, with no circular background or press ripple. Header icons and page content are all 16dp from the screen edge.
+4. Deny notification permission when first prompted, then go to Settings and tap "Enable" — on Android API 33+, the system dialog should reappear (first denial only); on a second denial, Android will stop showing the dialog and Settings should instead guide you to the app's system settings page.
+5. Confirm the main screen shows a persistent "Notifications are off" banner whenever permission is denied, with a path into Settings.
+6. On a fresh install (or after clearing the app's permission via system settings), go to Settings and tap "Enable", then grant the permission via the native prompt — the "Denied" status should clear and a brief confirmation toast should appear and auto-dismiss on its own.
 
 ---
 

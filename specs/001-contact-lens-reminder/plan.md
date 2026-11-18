@@ -14,7 +14,7 @@ This plan supersedes the original single-screen plan to account for spec.md's Us
 **Language/Version**: Kotlin 2.3.21 (KMP), Compose Multiplatform 1.10.3
 **Primary Dependencies**: Room 3.0.0-alpha03, Koin 4.2.1, kotlinx-datetime 0.7.1, kotlinx.serialization 1.11.0, androidx.activity:activity-compose 1.13.0 (already present in `androidMain`, now also backs the permission-request launcher)
 **Storage**: Room 3 KMP alpha — unchanged single `lens_cycle` table, singleton row (id=1); no schema changes required for this feature (reminder hour/minute already present)
-**Testing**: `kotlin.test` in `commonTest` — unit tests for date/calendar calculations and ViewModel state reducers, no device/emulator required
+**Testing**: `kotlin.test` + `kotlinx-coroutines-test` in `commonTest` — unit tests for date/calendar calculations and ViewModel state (fake repository/scheduler, no device/emulator required)
 **Target Platform**: Android min SDK 31 + iOS 17.0 (single `:composeApp` KMP module)
 **Project Type**: Mobile app (KMP, Compose Multiplatform) — 2 screens (Main, Settings) with overlay/dialog interactions
 **Performance Goals**: App state loads instantly from Room (single row); notification fires within 15 min of scheduled time (SC-002 — inexact alarms, no exact-alarm permission); navigating Main ↔ Settings and opening/closing overlays must feel instant (single Compose recomposition, no I/O on the navigation path)
@@ -60,7 +60,7 @@ specs/001-contact-lens-reminder/
 composeApp/src/
 ├── commonMain/kotlin/com/chb/lenstracker/
 │   ├── di/
-│   │   └── AppModule.kt                # Unchanged
+│   │   └── AppModule.kt                # UPDATED: registers `SettingsViewModel` explicitly (`viewModel { SettingsViewModel(get(), get()) }`) because its message resolver has a default
 │   ├── domain/
 │   │   └── model/
 │   │       ├── LensCycle.kt            # Unchanged
@@ -70,16 +70,17 @@ composeApp/src/
 │   │   └── NotificationScheduler.kt    # UPDATED: + `suspend fun requestPermission(): Boolean`
 │   └── ui/
 │       ├── navigation/
-│       │   └── AppScreen.kt            # NEW: sealed class { Main, Settings }; hoisted as simple Compose state in the app root — no navigation library needed for 2 screens with no back stack
+│       │   └── AppScreen.kt            # NEW: sealed class { Main, Settings } + `AppScreenSaver`; hoisted as `rememberSaveable` state in the app root (survives rotation/process restart) — no navigation library needed for 2 screens with no back stack
 │       ├── screen/
-│       │   ├── HomeScreen.kt           # UPDATED: gear icon navigates to Settings; start-date field opens the native Material3 `DatePickerDialog`; "Mark as Changed" opens the confirm dialog; shows toast + denied-notifications banner
+│       │   ├── HomeScreen.kt           # UPDATED: centered `ScreenHeader` title; gear icon navigates to Settings; start-date field opens the native Material3 `DatePickerDialog`; "Mark as Changed" opens the confirm dialog; shows toast + denied-notifications banner
 │       │   ├── HomeViewModel.kt        # UPDATED: `HomeUiState` gains `showDatePicker`, `showConfirmDialog`, `toastMessage`
-│       │   ├── SettingsScreen.kt       # NEW: reminder time field, notification permission status + Enable control, back control; shows `ConfirmationToast` when permission is successfully granted
-│       │   └── SettingsViewModel.kt    # NEW: `SettingsUiState` (reminderHour/Minute, permissionStatus, toastMessage); events `UpdateReminderTime`, `RequestPermission`; sets `toastMessage` when `requestPermission()` resolves `true`
+│       │   ├── SettingsScreen.kt       # NEW: `ScreenHeader` (centered title + back arrow), reminder time picker, notification permission tag + Enable control, denied explanation, "Open Settings" shortcut, `ConfirmationToast` when permission is granted
+│       │   └── SettingsViewModel.kt    # NEW: `SettingsUiState` (reminderHour/Minute, hasNotificationPermission, permissionRequestInFlight, toastMessage); events `UpdateReminderTime`, `RequestPermission`, `OpenAppSettings`; sets `toastMessage` when `requestPermission()` resolves `true`; toast text comes from an injectable resolver (default `getString`) so host unit tests need no resource loader
 │       └── component/
 │           ├── LensProgressBar.kt      # Unchanged
 │           ├── IntervalSelector.kt     # Unchanged
 │           ├── ReminderTimePicker.kt   # Hour dropdown (0–23) + minute dropdown restricted to 15-minute steps (00/15/30/45), now rendered on SettingsScreen instead of HomeScreen
+│           ├── ScreenHeader.kt         # NEW: centered screen title with optional back arrow / settings gear (icon only — no container or press ripple), drawn 16dp from the screen edge; also exposes `screenContentPadding()` (16dp horizontal + vertical system insets) for content below the header; shared by HomeScreen and SettingsScreen
 │           ├── ConfirmDialog.kt        # NEW: reusable Yes/No confirmation dialog (used by "Mark as Changed")
 │           └── ConfirmationToast.kt    # NEW: transient, auto-dismissing confirmation banner; reused by both HomeScreen (Mark as Changed) and SettingsScreen (permission granted)
 ├── androidMain/kotlin/com/chb/lenstracker/

@@ -45,6 +45,16 @@
     <string name="toast_marked_as_changed">Lenses marked as changed</string>
 
     <!-- Settings -->
+    <string name="settings_title">Settings</string>
+    <string name="settings_reminder_time_label">Reminder time</string>
+    <string name="settings_notifications_label">Notifications</string>
+    <string name="settings_permission_allowed">Allowed</string>
+    <string name="settings_permission_denied">Denied</string>
+    <string name="settings_permission_denied_explanation">Reminders can&apos;t reach you while notifications are off. Enable them to be told when your lenses are due.</string>
+    <string name="settings_permission_blocked_explanation">If the permission prompt doesn&apos;t appear, turn notifications on for this app in your device settings.</string>
+    <string name="action_enable">Enable</string>
+    <string name="action_open_settings">Open Settings</string>
+    <string name="action_back">Back</string>
     <string name="toast_notifications_enabled">Notifications enabled</string>
 
     <!-- Actions -->

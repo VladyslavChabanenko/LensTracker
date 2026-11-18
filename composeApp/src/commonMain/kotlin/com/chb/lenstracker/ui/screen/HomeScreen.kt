@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeContentPadding
+import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.DatePicker
@@ -56,6 +57,8 @@ import com.chb.lenstracker.ui.component.IntervalSelector
 import com.chb.lenstracker.ui.component.LensProgressBar
 import com.chb.lenstracker.ui.component.MessageBannerSlot
 import com.chb.lenstracker.ui.component.MessageSeverity
+import com.chb.lenstracker.ui.component.ScreenHeader
+import com.chb.lenstracker.ui.component.screenContentPadding
 import com.chb.lenstracker.ui.component.UiMessage
 import com.chb.lenstracker.ui.theme.Accent2_600
 import com.chb.lenstracker.ui.theme.BigNumberStyle
@@ -67,7 +70,6 @@ import com.chb.lenstracker.ui.theme.ColorText
 import com.chb.lenstracker.ui.theme.FieldLabelStyle
 import com.chb.lenstracker.ui.theme.InputTextStyle
 import com.chb.lenstracker.ui.theme.LensTrackerTheme
-import com.chb.lenstracker.ui.theme.ScreenTitleStyle
 import com.chb.lenstracker.ui.theme.SectionKickerStyle
 import com.chb.lenstracker.ui.theme.SubLabelStyle
 import kotlin.time.Clock
@@ -84,13 +86,20 @@ import org.koin.compose.viewmodel.koinViewModel
 
 @Composable
 fun HomeScreen(
+    onOpenSettings: () -> Unit,
     modifier: Modifier = Modifier,
     viewModel: HomeViewModel = koinViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val today = Clock.System.todayIn(TimeZone.currentSystemDefault())
 
-    HomeScreenContent(uiState = uiState, today = today, onEvent = viewModel::onEvent, modifier = modifier)
+    HomeScreenContent(
+        uiState = uiState,
+        today = today,
+        onEvent = viewModel::onEvent,
+        onOpenSettings = onOpenSettings,
+        modifier = modifier
+    )
 }
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalTime::class)
@@ -99,6 +108,7 @@ private fun HomeScreenContent(
     uiState: HomeUiState,
     today: LocalDate,
     onEvent: (HomeUiEvent) -> Unit,
+    onOpenSettings: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     val lensCycle = uiState.lensCycle
@@ -108,79 +118,82 @@ private fun HomeScreenContent(
         Column(
             modifier = Modifier
                 .background(MaterialTheme.colorScheme.background)
-                .safeContentPadding()
+                .safeDrawingPadding()
                 .fillMaxSize(),
             verticalArrangement = Arrangement.spacedBy(20.dp)
         ) {
-            Column {
-                Text(text = stringResource(Res.string.home_title), style = ScreenTitleStyle, color = ColorAccent)
-            }
+            ScreenHeader(title = stringResource(Res.string.home_title), onOpenSettings = onOpenSettings)
 
-            MessageBannerSlot(
-                messages = buildList {
-                    if (!uiState.hasNotificationPermission) {
-                        add(
-                            UiMessage(
-                                text = notificationsDisabledMessage,
-                                severity = MessageSeverity.WARNING
+            Column(
+                modifier = Modifier.screenContentPadding(),
+                verticalArrangement = Arrangement.spacedBy(20.dp)
+            ) {
+                MessageBannerSlot(
+                    messages = buildList {
+                        if (!uiState.hasNotificationPermission) {
+                            add(
+                                UiMessage(
+                                    text = notificationsDisabledMessage,
+                                    severity = MessageSeverity.WARNING
+                                )
                             )
-                        )
+                        }
                     }
-                }
-            )
-
-            StatusCard(state = uiState.statusCard)
-
-            Column(verticalArrangement = Arrangement.spacedBy(5.dp)) {
-                Text(
-                    text = stringResource(Res.string.home_start_date_label),
-                    style = FieldLabelStyle,
-                    color = ColorText.copy(alpha = 0.7f)
                 )
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .heightIn(min = 36.dp)
-                        .clip(RoundedCornerShape(2.dp))
-                        .background(ColorSurface)
-                        .border(1.dp, ColorDivider, RoundedCornerShape(2.dp))
-                        .clickable { onEvent(HomeUiEvent.OpenDatePicker) }
-                        .padding(horizontal = 10.dp, vertical = 6.dp),
-                    contentAlignment = Alignment.CenterStart
-                ) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
+
+                StatusCard(state = uiState.statusCard)
+
+                Column(verticalArrangement = Arrangement.spacedBy(5.dp)) {
+                    Text(
+                        text = stringResource(Res.string.home_start_date_label),
+                        style = FieldLabelStyle,
+                        color = ColorText.copy(alpha = 0.7f)
+                    )
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .heightIn(min = 36.dp)
+                            .clip(RoundedCornerShape(2.dp))
+                            .background(ColorSurface)
+                            .border(1.dp, ColorDivider, RoundedCornerShape(2.dp))
+                            .clickable { onEvent(HomeUiEvent.OpenDatePicker) }
+                            .padding(horizontal = 10.dp, vertical = 6.dp),
+                        contentAlignment = Alignment.CenterStart
                     ) {
-                        Text(
-                            text = uiState.startDateString
-                                ?: stringResource(Res.string.home_start_date_placeholder),
-                            style = InputTextStyle
-                        )
-                        Text(text = "▾", style = InputTextStyle, color = ColorText.copy(alpha = 0.5f))
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = uiState.startDateString
+                                    ?: stringResource(Res.string.home_start_date_placeholder),
+                                style = InputTextStyle
+                            )
+                            Text(text = "▾", style = InputTextStyle, color = ColorText.copy(alpha = 0.5f))
+                        }
                     }
                 }
-            }
 
-            Column(verticalArrangement = Arrangement.spacedBy(5.dp)) {
-                Text(
-                    text = stringResource(Res.string.home_interval_label),
-                    style = FieldLabelStyle,
-                    color = ColorText.copy(alpha = 0.7f)
-                )
-                IntervalSelector(
-                    selected = uiState.selectedInterval,
-                    onSelect = { interval -> onEvent(HomeUiEvent.SelectInterval(interval)) }
-                )
-            }
+                Column(verticalArrangement = Arrangement.spacedBy(5.dp)) {
+                    Text(
+                        text = stringResource(Res.string.home_interval_label),
+                        style = FieldLabelStyle,
+                        color = ColorText.copy(alpha = 0.7f)
+                    )
+                    IntervalSelector(
+                        selected = uiState.selectedInterval,
+                        onSelect = { interval -> onEvent(HomeUiEvent.SelectInterval(interval)) }
+                    )
+                }
 
-            if (lensCycle != null) {
-                Button(
-                    onClick = { onEvent(HomeUiEvent.OpenConfirmDialog) },
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Text(stringResource(Res.string.action_mark_as_changed))
+                if (lensCycle != null) {
+                    Button(
+                        onClick = { onEvent(HomeUiEvent.OpenConfirmDialog) },
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text(stringResource(Res.string.action_mark_as_changed))
+                    }
                 }
             }
         }
@@ -326,7 +339,8 @@ private fun HomeScreenOnTrackPreview() {
                 hasNotificationPermission = true
             ),
             today = today,
-            onEvent = {}
+            onEvent = {},
+            onOpenSettings = {}
         )
     }
 }
@@ -355,7 +369,8 @@ private fun HomeScreenOverduePreview() {
                 hasNotificationPermission = false
             ),
             today = today,
-            onEvent = {}
+            onEvent = {},
+            onOpenSettings = {}
         )
     }
 }
@@ -365,6 +380,6 @@ private fun HomeScreenOverduePreview() {
 private fun HomeScreenEmptyPreview() {
     val today = LocalDate(2026, 7, 29)
     LensTrackerTheme {
-        HomeScreenContent(uiState = HomeUiState(), today = today, onEvent = {})
+        HomeScreenContent(uiState = HomeUiState(), today = today, onEvent = {}, onOpenSettings = {})
     }
 }

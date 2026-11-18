@@ -132,3 +132,5 @@ Held as a single piece of state in the app root composable — not a back stack,
 | `hasNotificationPermission` | `Boolean` | Current permission status from `NotificationScheduler.hasPermission()` |
 | `permissionRequestInFlight` | `Boolean` | `true` while an in-progress `requestPermission()` call is pending, to disable the Enable control from double-firing |
 | `toastMessage` | `String?` | Non-null while a transient confirmation message (FR-012) should be shown — set when `requestPermission()` resolves `true` (permission granted); auto-clears after a short delay, same pattern as `HomeUiState.toastMessage` |
+
+**Not part of `SettingsUiState`**: whether to offer the "Open Settings" shortcut. `NotificationScheduler.requestPermission()` only reports granted/denied, not whether the OS actually showed its prompt, so `SettingsScreen` keeps a local `requestAttempted` flag and offers the shortcut once a request has finished with permission still denied (FR-011). On Android this can appear one denial before the OS stops prompting; the Enable control stays available alongside it. An exact signal would require extending the `NotificationScheduler` contract.
