@@ -88,7 +88,11 @@ private fun TimeDropdown(
                 modifier = Modifier.padding(start = 8.dp)
             )
         }
-        DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
+        DropdownMenu(
+            expanded = expanded,
+            onDismissRequest = { expanded = false },
+            containerColor = ColorSurface
+        ) {
             options.forEach { option ->
                 DropdownMenuItem(
                     text = { Text(option.twoDigits(), style = InputTextStyle) },

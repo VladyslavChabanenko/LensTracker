@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.DatePicker
+import androidx.compose.material3.DatePickerDefaults
 import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
@@ -124,7 +125,6 @@ private fun HomeScreenContent(
     Box(modifier = modifier.fillMaxSize()) {
         Column(
             modifier = Modifier
-                .background(MaterialTheme.colorScheme.background)
                 .safeDrawingPadding()
                 .fillMaxSize(),
             verticalArrangement = Arrangement.spacedBy(20.dp)
@@ -233,6 +233,7 @@ private fun HomeScreenContent(
                     utcTimeMillis <= todayMillis
             }
         )
+        val pickerColors = DatePickerDefaults.colors(containerColor = ColorSurface)
         DatePickerDialog(
             onDismissRequest = { onEvent(HomeUiEvent.CloseDatePicker) },
             confirmButton = {
@@ -252,9 +253,10 @@ private fun HomeScreenContent(
                 OutlinedButton(onClick = { onEvent(HomeUiEvent.CloseDatePicker) }) {
                     Text(stringResource(Res.string.action_cancel))
                 }
-            }
+            },
+            colors = pickerColors
         ) {
-            DatePicker(state = datePickerState)
+            DatePicker(state = datePickerState, colors = pickerColors)
         }
     }
 }

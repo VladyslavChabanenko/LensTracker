@@ -3,8 +3,8 @@ package com.chb.lenstracker.ui.theme
 import androidx.compose.ui.graphics.Color
 
 // Base roles
-val ColorBg = Color(0xFFF3F2F2)
-val ColorSurface = Color(0xFFEAE9E9)
+val ColorBg = Color(0xFFFFFFFF)
+val ColorSurface = Color(0xFFFFFFFF)
 val ColorText = Color(0xFF201E1D)
 val ColorAccent = Color(0xFF0088B0)
 val ColorAccent2 = Color(0xFFD6006C)

@@ -3,6 +3,7 @@ package com.chb.lenstracker.ui.theme
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 
 // Light theme only — this app does not support a dark theme.
@@ -23,8 +24,24 @@ private val LensTrackerColorScheme = lightColorScheme(
     onSurface = ColorText,
     surfaceVariant = ColorSurface,
     onSurfaceVariant = Neutral600,
-    outline = Neutral300
+    outline = Neutral300,
+    // Material's defaults for these roles are lavender-greys; keep every container neutral.
+    outlineVariant = ColorDivider,
+    secondaryContainer = Accent100,
+    onSecondaryContainer = Accent800,
+    surfaceDim = ColorSurface,
+    surfaceBright = ColorSurface,
+    surfaceContainerLowest = ColorSurface,
+    surfaceContainerLow = ColorSurface,
+    surfaceContainer = ColorSurface,
+    surfaceContainerHigh = ColorSurface,
+    surfaceContainerHighest = ColorSurface,
+    inverseSurface = ColorText,
+    inverseOnSurface = ColorBg
 )
+
+/** App-wide page background: a top-to-bottom fade from the lightest accent to white. */
+val AppBackgroundBrush: Brush = Brush.verticalGradient(listOf(Accent100, Color.White))
 
 @Composable
 fun LensTrackerTheme(

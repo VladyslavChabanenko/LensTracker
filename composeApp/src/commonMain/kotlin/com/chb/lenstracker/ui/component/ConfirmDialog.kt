@@ -8,6 +8,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.tooling.preview.Preview
 import com.chb.lenstracker.resources.Res
 import com.chb.lenstracker.resources.action_cancel
+import com.chb.lenstracker.ui.theme.ColorSurface
 import com.chb.lenstracker.ui.theme.LensTrackerTheme
 import org.jetbrains.compose.resources.stringResource
 
@@ -23,6 +24,7 @@ fun ConfirmDialog(
 ) {
     AlertDialog(
         onDismissRequest = onDismiss,
+        containerColor = ColorSurface,
         title = { Text(title) },
         text = { Text(body) },
         confirmButton = {

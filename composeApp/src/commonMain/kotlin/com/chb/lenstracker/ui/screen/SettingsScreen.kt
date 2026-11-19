@@ -86,7 +86,6 @@ private fun SettingsScreenContent(
     Box(modifier = modifier.fillMaxSize()) {
         Column(
             modifier = Modifier
-                .background(MaterialTheme.colorScheme.background)
                 .safeDrawingPadding()
                 .fillMaxSize(),
             verticalArrangement = Arrangement.spacedBy(20.dp)
