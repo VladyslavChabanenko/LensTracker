@@ -14,8 +14,12 @@ import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.plus
 import kotlinx.datetime.toLocalDateTime
+import org.koin.core.component.KoinComponent
+import org.koin.core.component.inject
 
-class NotificationReceiver : BroadcastReceiver() {
+class NotificationReceiver : BroadcastReceiver(), KoinComponent {
+
+    private val scheduler: NotificationScheduler by inject()
 
     override fun onReceive(context: Context, intent: Intent) {
         val title = intent.getStringExtra(AndroidNotificationScheduler.EXTRA_TITLE)
@@ -27,7 +31,7 @@ class NotificationReceiver : BroadcastReceiver() {
         // one itself — the reminder keeps nagging daily until the lenses are marked as changed.
         val zone = TimeZone.currentSystemDefault()
         val tomorrow = Clock.System.now().plus(1, DateTimeUnit.DAY, zone).toLocalDateTime(zone)
-        AndroidNotificationScheduler(context).schedule(tomorrow, title, body)
+        scheduler.schedule(tomorrow, title, body)
     }
 
     companion object {

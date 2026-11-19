@@ -13,7 +13,10 @@ import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toInstant
 
-class AndroidNotificationScheduler(private val context: Context) : NotificationScheduler {
+class AndroidNotificationScheduler(
+    private val context: Context,
+    private val permissionBridge: AndroidPermissionBridge
+) : NotificationScheduler {
 
     private val alarmManager: AlarmManager = context.getSystemService(AlarmManager::class.java)
 
@@ -43,8 +46,13 @@ class AndroidNotificationScheduler(private val context: Context) : NotificationS
             context.checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) ==
             PackageManager.PERMISSION_GRANTED
 
-    // Placeholder: requesting POST_NOTIFICATIONS needs an Activity-scoped launcher, wired in T043.
-    override suspend fun requestPermission(): Boolean = hasPermission()
+    override suspend fun requestPermission(): Boolean {
+        // Covers API < 33 (no runtime permission) and an already-granted permission.
+        if (hasPermission()) return true
+        // The Activity-owned launcher shows the prompt, or resolves straight away when the OS
+        // will no longer show it — see NotificationPermissionHost in MainActivity.
+        return permissionBridge.request()
+    }
 
     override fun openAppSettings() {
         val intent = Intent(

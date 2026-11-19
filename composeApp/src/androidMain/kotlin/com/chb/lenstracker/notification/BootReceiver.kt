@@ -24,6 +24,7 @@ import org.koin.core.component.inject
 class BootReceiver : BroadcastReceiver(), KoinComponent {
 
     private val dao: LensCycleDao by inject()
+    private val scheduler: NotificationScheduler by inject()
 
     override fun onReceive(context: Context, intent: Intent) {
         if (intent.action != Intent.ACTION_BOOT_COMPLETED &&
@@ -55,7 +56,6 @@ class BootReceiver : BroadcastReceiver(), KoinComponent {
             date = cycle.nextChangeDate(),
             time = LocalTime(cycle.reminderHour, cycle.reminderMinute)
         )
-        val scheduler = AndroidNotificationScheduler(context)
 
         if (due.toInstant(zone) > Clock.System.now()) {
             scheduler.schedule(due, title, body)
