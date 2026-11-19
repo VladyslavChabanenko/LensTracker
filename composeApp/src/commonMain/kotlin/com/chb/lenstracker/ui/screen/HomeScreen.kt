@@ -30,6 +30,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.chb.lenstracker.domain.model.LensCycle
 import com.chb.lenstracker.domain.model.ReminderInterval
@@ -92,6 +93,12 @@ fun HomeScreen(
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val today = Clock.System.todayIn(TimeZone.currentSystemDefault())
+
+    // Permission can change while this screen is hidden (Settings screen, system settings).
+    LifecycleResumeEffect(viewModel) {
+        viewModel.onEvent(HomeUiEvent.RefreshPermission)
+        onPauseOrDispose {}
+    }
 
     HomeScreenContent(
         uiState = uiState,

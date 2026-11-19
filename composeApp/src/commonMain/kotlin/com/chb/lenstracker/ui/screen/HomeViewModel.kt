@@ -61,6 +61,8 @@ sealed class HomeUiEvent {
     data object CloseDatePicker : HomeUiEvent()
     data class SelectDate(val date: LocalDate) : HomeUiEvent()
     data class SelectInterval(val interval: ReminderInterval) : HomeUiEvent()
+    /** Re-reads the OS permission status; sent whenever the screen becomes visible again. */
+    data object RefreshPermission : HomeUiEvent()
 }
 
 internal const val DEFAULT_REMINDER_HOUR = 9
@@ -109,6 +111,7 @@ class HomeViewModel(
         when (event) {
             is HomeUiEvent.SaveCycle -> saveCycle(event)
             HomeUiEvent.MarkAsChanged -> markAsChanged()
+            HomeUiEvent.RefreshPermission -> hasNotificationPermission.value = scheduler.hasPermission()
             HomeUiEvent.OpenConfirmDialog -> showConfirmDialog.value = true
             HomeUiEvent.CloseConfirmDialog -> showConfirmDialog.value = false
             HomeUiEvent.OpenDatePicker -> showDatePicker.value = true

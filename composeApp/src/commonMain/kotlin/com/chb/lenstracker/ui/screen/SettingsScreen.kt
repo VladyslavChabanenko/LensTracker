@@ -21,6 +21,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.chb.lenstracker.resources.Res
 import com.chb.lenstracker.resources.action_enable
@@ -53,6 +54,12 @@ fun SettingsScreen(
     viewModel: SettingsViewModel = koinViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+
+    // The user may have changed the permission in system settings and come back.
+    LifecycleResumeEffect(viewModel) {
+        viewModel.onEvent(SettingsUiEvent.RefreshPermission)
+        onPauseOrDispose {}
+    }
 
     SettingsScreenContent(
         uiState = uiState,

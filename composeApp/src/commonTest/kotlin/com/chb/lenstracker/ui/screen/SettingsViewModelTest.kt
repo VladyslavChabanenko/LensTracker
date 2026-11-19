@@ -104,6 +104,19 @@ class SettingsViewModelTest {
     }
 
     @Test
+    fun refreshPermissionPicksUpAChangeMadeOutsideTheApp() = runTest {
+        scheduler.granted = false
+        val viewModel = viewModel()
+        assertFalse(viewModel.uiState.value.hasNotificationPermission)
+
+        scheduler.granted = true
+        viewModel.onEvent(SettingsUiEvent.RefreshPermission)
+        runCurrent()
+
+        assertTrue(viewModel.uiState.value.hasNotificationPermission)
+    }
+
+    @Test
     fun grantedRequestUpdatesPermissionStatusAndSetsToast() = runTest {
         scheduler.granted = false
         val viewModel = viewModel()

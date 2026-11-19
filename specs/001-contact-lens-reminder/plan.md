@@ -80,7 +80,7 @@ composeApp/src/
 │           ├── LensProgressBar.kt      # Unchanged
 │           ├── IntervalSelector.kt     # Unchanged
 │           ├── ReminderTimePicker.kt   # Hour dropdown (0–23) + minute dropdown restricted to 15-minute steps (00/15/30/45), now rendered on SettingsScreen instead of HomeScreen
-│           ├── ScreenHeader.kt         # NEW: centered screen title with optional back arrow / settings gear (icon only — no container or press ripple), drawn 16dp from the screen edge; also exposes `screenContentPadding()` (16dp horizontal + vertical system insets) for content below the header; shared by HomeScreen and SettingsScreen
+│           ├── ScreenHeader.kt         # NEW: centered screen title with optional back arrow / settings gear (icon only — no container or press ripple), drawn 16dp from the screen edge; also exposes `screenContentPadding()` (16dp horizontal) for content below the header; shared by HomeScreen and SettingsScreen
 │           ├── ConfirmDialog.kt        # NEW: reusable Yes/No confirmation dialog (used by "Mark as Changed")
 │           └── ConfirmationToast.kt    # NEW: transient, auto-dismissing confirmation banner; reused by both HomeScreen (Mark as Changed) and SettingsScreen (permission granted)
 ├── androidMain/kotlin/com/chb/lenstracker/

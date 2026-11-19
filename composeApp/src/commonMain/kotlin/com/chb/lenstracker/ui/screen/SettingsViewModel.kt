@@ -31,6 +31,8 @@ sealed class SettingsUiEvent {
     data class UpdateReminderTime(val hour: Int, val minute: Int) : SettingsUiEvent()
     data object RequestPermission : SettingsUiEvent()
     data object OpenAppSettings : SettingsUiEvent()
+    /** Re-reads the OS permission status; sent whenever the screen becomes visible again. */
+    data object RefreshPermission : SettingsUiEvent()
 }
 
 class SettingsViewModel(
@@ -67,6 +69,7 @@ class SettingsViewModel(
             is SettingsUiEvent.UpdateReminderTime -> updateReminderTime(event)
             SettingsUiEvent.RequestPermission -> requestPermission()
             SettingsUiEvent.OpenAppSettings -> scheduler.openAppSettings()
+            SettingsUiEvent.RefreshPermission -> hasNotificationPermission.value = scheduler.hasPermission()
         }
     }
 
